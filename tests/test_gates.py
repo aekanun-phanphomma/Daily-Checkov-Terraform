@@ -90,6 +90,19 @@ def test_edges_must_reference_nodes():
     assert "ghost" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
 
 
+def test_extra_keys_and_aligned_diff_lines_are_tidied_not_failed():
+    # Both cost a repair each on the first real run.
+    spec = copy.deepcopy(DIAGRAM)
+    spec["metadata"] = {"model": "x"}
+    spec["code_diff"][0] = "-   block_public_acls       = false"
+    gate_diagram(spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    assert "metadata" not in spec
+    assert spec["code_diff"][0] == "- block_public_acls = false"
+    content = {**CONTENT, "notes": "extra"}
+    gate_schema(content)
+    assert "notes" not in content
+
+
 def test_normalize_ignores_alignment_and_comments():
     assert normalize_code_line("  block_public_acls       = true # FIX: x") == \
         "block_public_acls = true"

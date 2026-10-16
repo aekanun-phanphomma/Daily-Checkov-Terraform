@@ -17,11 +17,14 @@
     width: 1200px; height: 1500px; overflow: hidden;
     background: var(--bg); color: var(--ink);
     font-family: "Liberation Sans", "DejaVu Sans", Arial, Helvetica, sans-serif;
-    padding: 64px 64px 56px; display: flex; flex-direction: column;
-    justify-content: space-between; gap: 28px;
+    padding: 64px 64px 56px; display: flex; flex-direction: column; gap: 28px;
   }
   .eyebrow { font-size: 22px; letter-spacing: .14em; color: var(--muted); font-weight: 700; }
   h1 { font-size: 52px; line-height: 1.12; font-weight: 800; margin-top: 10px; }
+  /* Panels + code sit in the middle band and stay together; spare height
+     goes above and below the group instead of between every block. */
+  .middle { flex: 1; display: flex; flex-direction: column; justify-content: center;
+            gap: 40px; }
   .panel {
     background: var(--panel); border: 1px solid var(--line); border-radius: 20px;
     padding: 26px 30px; border-left: 10px solid var(--accent);
@@ -81,6 +84,7 @@
     <h1>{{ spec.title }}</h1>
   </div>
 
+  <main class="middle">
   {% for key, tag, callout in [("before", "MISCONFIGURED", spec.before.risk_callout),
                                ("after", "BEST PRACTICE", spec.after.control_callout)] %}
   {% set panel = spec[key] %}
@@ -103,6 +107,7 @@
   {% endfor %}
 
   <div class="code">{% for line in spec.code_diff %}<div class="{{ 'minus' if line.startswith('-') else 'plus' }}">{{ line }}</div>{% endfor %}</div>
+  </main>
 
   <div class="footer">
     <div><strong>{{ check_id }}</strong> &middot; {{ resource }}</div>

@@ -112,7 +112,21 @@ def check_schema(data: dict, schema_name: str, gate: str) -> None:
         raise GateFailure(gate, detail)
 
 
+def drop_extra_keys(data: dict, schema_name: str) -> None:
+    """Remove top-level keys the schema does not define, in place.
+
+    Smaller models like to add a "metadata" or "notes" key. That is noise,
+    not an error worth a repair round trip; missing or malformed keys still
+    fail the schema.
+    """
+    known = _schema(schema_name)["properties"].keys()
+    for key in [k for k in data if k not in known]:
+        log.info("dropping unexpected key %r from model output", key)
+        del data[key]
+
+
 def gate_schema(content: dict) -> None:
+    drop_extra_keys(content, "content.schema.json")
     check_schema(content, "content.schema.json", "G1 schema")
     unknown = [k for k, v in content.items() if "UNKNOWN" in json.dumps(v)]
     if unknown:
@@ -324,6 +338,15 @@ def normalize_code_line(line: str) -> str:
 
 def gate_diagram(spec: dict, bad_tf: str, good_tf: str) -> None:
     gate = "G7 diagram"
+    drop_extra_keys(spec, "diagram.schema.json")
+    # Models copy diff lines with fmt's alignment ("-   x       = 1"). The
+    # comparison below ignores whitespace anyway, so normalise first rather
+    # than spend a repair on it -- and the card shows "- x = 1", not columns.
+    spec["code_diff"] = [
+        f"{line[0]} {normalize_code_line(line[1:])}"
+        if isinstance(line, str) and line[:1] in "-+" and line[1:].strip() else line
+        for line in spec.get("code_diff", [])
+    ]
     check_schema(spec, "diagram.schema.json", gate)
     _plain_english(json.dumps(spec, ensure_ascii=False), "diagram_spec", gate)
 
