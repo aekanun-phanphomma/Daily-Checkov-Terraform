@@ -1,0 +1,61 @@
+# Curated priority list. This file, not Checkov, decides what is "important":
+# open-source Checkov has no severity field (severity comes from the Prisma
+# Cloud API and needs --bc-api-key), so the priority below is ours and must
+# never be described in a post as "Checkov severity".
+#
+#   P1  direct exposure: internet ingress, public data, wildcard IAM, secrets
+#   P2  defence in depth: encryption at rest, IMDSv2, TLS versions
+#   P3  detection: logging and audit trails
+#
+# Every id + resource pair was taken from `checkov --list --framework terraform`
+# on the version pinned in requirements.txt, and tests/test_catalog.py re-checks
+# that on every run. `enabled: false` parks a rule the generator keeps failing
+# on (the failure issue tells you which one) without losing its history.
+#
+# `resource` is the type the example must use. Several checks apply to more
+# than one type; we pick the one that makes the clearest teaching example.
+
+- {id: CKV_AWS_53,   cloud: aws,   resource: aws_s3_bucket_public_access_block, priority: P1, topic: public-exposure}
+- {id: CKV_AWS_54,   cloud: aws,   resource: aws_s3_bucket_public_access_block, priority: P1, topic: public-exposure}
+- {id: CKV_AWS_24,   cloud: aws,   resource: aws_security_group,                priority: P1, topic: network-ingress}
+- {id: CKV_AWS_25,   cloud: aws,   resource: aws_security_group,                priority: P1, topic: network-ingress}
+- {id: CKV_AWS_17,   cloud: aws,   resource: aws_db_instance,                   priority: P1, topic: public-exposure}
+- {id: CKV_AWS_49,   cloud: aws,   resource: aws_iam_policy_document,           priority: P1, topic: iam-wildcard}
+- {id: CKV_AWS_1,    cloud: aws,   resource: aws_iam_policy_document,           priority: P1, topic: iam-wildcard}
+- {id: CKV_AWS_33,   cloud: aws,   resource: aws_kms_key,                       priority: P1, topic: iam-wildcard}
+- {id: CKV_AWS_46,   cloud: aws,   resource: aws_instance,                      priority: P1, topic: secrets}
+- {id: CKV_AWS_38,   cloud: aws,   resource: aws_eks_cluster,                   priority: P1, topic: public-exposure}
+
+- {id: CKV_AZURE_10,  cloud: azure, resource: azurerm_network_security_rule,     priority: P1, topic: network-ingress}
+- {id: CKV_AZURE_9,   cloud: azure, resource: azurerm_network_security_rule,     priority: P1, topic: network-ingress}
+- {id: CKV_AZURE_190, cloud: azure, resource: azurerm_storage_account,           priority: P1, topic: public-exposure}
+- {id: CKV_AZURE_59,  cloud: azure, resource: azurerm_storage_account,           priority: P1, topic: public-exposure}
+- {id: CKV_AZURE_11,  cloud: azure, resource: azurerm_mssql_firewall_rule,       priority: P1, topic: network-ingress}
+- {id: CKV_AZURE_113, cloud: azure, resource: azurerm_mssql_server,              priority: P1, topic: public-exposure}
+- {id: CKV_AZURE_189, cloud: azure, resource: azurerm_key_vault,                 priority: P1, topic: public-exposure}
+- {id: CKV_AZURE_141, cloud: azure, resource: azurerm_kubernetes_cluster,        priority: P1, topic: access-control}
+
+- {id: CKV_GCP_2,   cloud: gcp,   resource: google_compute_firewall,             priority: P1, topic: network-ingress}
+- {id: CKV_GCP_3,   cloud: gcp,   resource: google_compute_firewall,             priority: P1, topic: network-ingress}
+- {id: CKV_GCP_114, cloud: gcp,   resource: google_storage_bucket,               priority: P1, topic: public-exposure}
+- {id: CKV_GCP_28,  cloud: gcp,   resource: google_storage_bucket_iam_member,    priority: P1, topic: public-exposure}
+- {id: CKV_GCP_60,  cloud: gcp,   resource: google_sql_database_instance,        priority: P1, topic: public-exposure}
+- {id: CKV_GCP_40,  cloud: gcp,   resource: google_compute_instance,             priority: P1, topic: public-exposure}
+- {id: CKV_GCP_42,  cloud: gcp,   resource: google_project_iam_member,           priority: P1, topic: iam-wildcard}
+- {id: CKV_GCP_18,  cloud: gcp,   resource: google_container_cluster,            priority: P1, topic: public-exposure}
+
+- {id: CKV_AWS_3,    cloud: aws,   resource: aws_ebs_volume,                    priority: P2, topic: encryption-at-rest}
+- {id: CKV_AWS_16,   cloud: aws,   resource: aws_db_instance,                   priority: P2, topic: encryption-at-rest}
+- {id: CKV_AWS_79,   cloud: aws,   resource: aws_instance,                      priority: P2, topic: instance-metadata}
+- {id: CKV_AWS_7,    cloud: aws,   resource: aws_kms_key,                       priority: P2, topic: key-management}
+- {id: CKV_AWS_103,  cloud: aws,   resource: aws_lb_listener,                   priority: P2, topic: transport-security}
+- {id: CKV_AZURE_44, cloud: azure, resource: azurerm_storage_account,           priority: P2, topic: transport-security}
+- {id: CKV_AZURE_52, cloud: azure, resource: azurerm_mssql_server,              priority: P2, topic: transport-security}
+- {id: CKV_GCP_6,    cloud: gcp,   resource: google_sql_database_instance,      priority: P2, topic: transport-security}
+- {id: CKV_GCP_29,   cloud: gcp,   resource: google_storage_bucket,             priority: P2, topic: access-control}
+- {id: CKV_GCP_43,   cloud: gcp,   resource: google_kms_crypto_key,             priority: P2, topic: key-management}
+
+- {id: CKV_AWS_251,  cloud: aws,   resource: aws_cloudtrail,                    priority: P3, topic: logging}
+- {id: CKV_AWS_37,   cloud: aws,   resource: aws_eks_cluster,                   priority: P3, topic: logging}
+- {id: CKV_AZURE_4,  cloud: azure, resource: azurerm_kubernetes_cluster,        priority: P3, topic: logging}
+- {id: CKV_GCP_1,    cloud: gcp,   resource: google_container_cluster,          priority: P3, topic: logging}

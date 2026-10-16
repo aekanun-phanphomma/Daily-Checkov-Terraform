@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Fixed 1200x1500 canvas (4:5, LinkedIn's tallest feed ratio). No web
+     fonts and no icon fonts: the runner renders with whatever Playwright's
+     --with-deps installed, so every glyph here is plain Latin and every
+     arrow/cross is drawn with CSS, never with a Unicode symbol that might
+     be missing from the font. */
+  :root {
+    --bg: #0f172a; --panel: #111c33; --ink: #e2e8f0; --muted: #94a3b8;
+    --bad: #f43f5e; --good: #22c55e; --line: #334155; --code: #0b1222;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1200px; height: 1500px; overflow: hidden;
+    background: var(--bg); color: var(--ink);
+    font-family: "Liberation Sans", "DejaVu Sans", Arial, Helvetica, sans-serif;
+    padding: 64px 64px 56px; display: flex; flex-direction: column;
+    justify-content: space-between; gap: 28px;
+  }
+  .eyebrow { font-size: 22px; letter-spacing: .14em; color: var(--muted); font-weight: 700; }
+  h1 { font-size: 52px; line-height: 1.12; font-weight: 800; margin-top: 10px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 20px;
+    padding: 26px 30px; border-left: 10px solid var(--accent);
+  }
+  .panel.before { --accent: var(--bad); }
+  .panel.after  { --accent: var(--good); }
+  .tag { display: inline-block; font-size: 20px; font-weight: 800; letter-spacing: .12em;
+         color: var(--accent); }
+  .callout { font-size: 27px; line-height: 1.3; margin: 8px 0 18px; }
+  .flow { display: flex; align-items: center; gap: 0; margin-top: 14px; }
+  .node {
+    width: 270px; flex: none; border: 2px solid var(--line); border-radius: 14px;
+    padding: 12px 16px; background: #0b1426;
+  }
+  .node .type { font-size: 15px; letter-spacing: .14em; color: var(--muted); font-weight: 700; }
+  .node .label { font-size: 23px; font-weight: 700; margin-top: 4px; }
+  .node.internet { border-color: #f59e0b; }
+  .node.user     { border-color: #60a5fa; }
+  .node.service  { border-color: #a78bfa; }
+  .node.resource { border-color: #38bdf8; }
+  .node.control  { border-color: var(--good); }
+  .edge { flex: 1; position: relative; height: 70px; margin: 0 14px; }
+  .edge .label { position: absolute; left: 0; right: 0; top: 0; text-align: center;
+                 font-family: "DejaVu Sans Mono", "Liberation Mono", Consolas, monospace;
+                 font-size: 19px; color: var(--ink); }
+  .edge .line { position: absolute; left: 0; right: 16px; top: 46px; border-top: 4px solid var(--muted); }
+  .edge .head { position: absolute; right: 0; top: 38px; width: 0; height: 0;
+                border-left: 18px solid var(--muted); border-top: 10px solid transparent;
+                border-bottom: 10px solid transparent; }
+  .edge.blocked .line { border-top: 4px dashed var(--bad); right: 0; }
+  .edge.blocked .head { display: none; }
+  .edge.blocked .label { color: var(--muted); text-decoration: line-through; }
+  .edge.blocked .stop { position: absolute; left: 50%; top: 31px; width: 34px; height: 34px;
+                        margin-left: -17px; border-radius: 50%; background: var(--bad); }
+  .edge.blocked .stop::before, .edge.blocked .stop::after {
+    content: ""; position: absolute; left: 7px; top: 15px; width: 20px; height: 4px;
+    background: #fff; transform: rotate(45deg);
+  }
+  .edge.blocked .stop::after { transform: rotate(-45deg); }
+  .code {
+    background: var(--code); border: 1px solid var(--line); border-radius: 16px;
+    padding: 22px 28px; font-family: "DejaVu Sans Mono", "Liberation Mono", Consolas, monospace;
+    font-size: 28px; line-height: 1.6; white-space: pre;
+  }
+  .code .minus { color: var(--bad); }
+  .code .plus  { color: var(--good); }
+  .footer { display: flex; flex-direction: column; gap: 6px; font-size: 21px;
+            color: var(--muted); white-space: nowrap; border-top: 1px solid var(--line);
+            padding-top: 22px; }
+  .footer strong { color: var(--ink); }
+  .verified { color: var(--good); font-weight: 700; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="eyebrow">CHECKOV DAILY &middot; {{ cloud|upper }} &middot; {{ check_id }}</div>
+    <h1>{{ spec.title }}</h1>
+  </div>
+
+  {% for key, tag, callout in [("before", "MISCONFIGURED", spec.before.risk_callout),
+                               ("after", "BEST PRACTICE", spec.after.control_callout)] %}
+  {% set panel = spec[key] %}
+  {% set nodes = panel.nodes | map(attribute="id") | list %}
+  <section class="panel {{ key }}">
+    <div class="tag">{{ tag }}</div>
+    <div class="callout">{{ callout }}</div>
+    {% for edge in panel.edges %}
+    {% set a = panel.nodes[nodes.index(edge["from"])] %}
+    {% set b = panel.nodes[nodes.index(edge["to"])] %}
+    <div class="flow">
+      <div class="node {{ a.type }}"><div class="type">{{ a.type|upper }}</div><div class="label">{{ a.label }}</div></div>
+      <div class="edge {{ 'blocked' if edge.blocked }}">
+        <div class="label">{{ edge.label }}</div><div class="line"></div><div class="head"></div><div class="stop"></div>
+      </div>
+      <div class="node {{ b.type }}"><div class="type">{{ b.type|upper }}</div><div class="label">{{ b.label }}</div></div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endfor %}
+
+  <div class="code">{% for line in spec.code_diff %}<div class="{{ 'minus' if line.startswith('-') else 'plus' }}">{{ line }}</div>{% endfor %}</div>
+
+  <div class="footer">
+    <div><strong>{{ check_id }}</strong> &middot; {{ resource }}</div>
+    <div><span class="verified">Verified:</span> misconfigured FAILS, fix PASSES &middot; Checkov {{ checkov_version }}</div>
+    <div>{{ repo }}</div>
+  </div>
+</body>
+</html>

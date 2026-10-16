@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLM diagram spec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "before", "after", "code_diff"],
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "label"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,20}$"},
+        "type": {"enum": ["internet", "user", "service", "resource", "control"]},
+        "label": {"type": "string", "minLength": 1, "maxLength": 24}
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "label"],
+      "properties": {
+        "from": {"type": "string"},
+        "to": {"type": "string"},
+        "label": {"type": "string", "minLength": 1, "maxLength": 28},
+        "blocked": {"type": "boolean"}
+      }
+    }
+  },
+  "properties": {
+    "title": {"type": "string", "minLength": 5, "maxLength": 60},
+    "before": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "edges", "risk_callout"],
+      "properties": {
+        "nodes": {"type": "array", "minItems": 2, "maxItems": 4, "items": {"$ref": "#/$defs/node"}},
+        "edges": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"$ref": "#/$defs/edge"}},
+        "risk_callout": {"type": "string", "minLength": 5, "maxLength": 90}
+      }
+    },
+    "after": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "edges", "control_callout"],
+      "properties": {
+        "nodes": {"type": "array", "minItems": 2, "maxItems": 4, "items": {"$ref": "#/$defs/node"}},
+        "edges": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"$ref": "#/$defs/edge"}},
+        "control_callout": {"type": "string", "minLength": 5, "maxLength": 90}
+      }
+    },
+    "code_diff": {
+      "type": "array", "minItems": 2, "maxItems": 6,
+      "items": {"type": "string", "pattern": "^[-+] [^ ]", "maxLength": 80}
+    }
+  }
+}

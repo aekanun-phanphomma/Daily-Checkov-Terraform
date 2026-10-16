@@ -1,0 +1,43 @@
+name: linkedin-token-check
+
+# LinkedIn tokens for standard apps expire 60 days after issue and cannot be
+# refreshed programmatically (refresh tokens are for approved MDP partners).
+# The daily job fails loudly on 401, but by then a day is already lost; this
+# opens an issue 10 days ahead instead.
+#
+# Setup: after each OAuth run, set the repository variable
+#   LINKEDIN_TOKEN_ISSUED = YYYY-MM-DD   (the day the token was issued)
+
+on:
+  schedule:
+    - cron: "0 1 * * 1"      # Mondays, 08:00 Bangkok
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      ISSUED: ${{ vars.LINKEDIN_TOKEN_ISSUED }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Days left on the LinkedIn token
+        run: |
+          if [ -z "$ISSUED" ]; then
+            echo "::warning::Set the LINKEDIN_TOKEN_ISSUED repository variable (YYYY-MM-DD)"
+            exit 0
+          fi
+          left=$(( 60 - ( $(date -u +%s) - $(date -u -d "$ISSUED" +%s) ) / 86400 ))
+          echo "LinkedIn token: $left day(s) left"
+          [ "$left" -ge 10 ] && exit 0
+
+          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+                   --search "LinkedIn token in:title" --json number --jq length)
+          [ "$open" -gt 0 ] && { echo "reminder already open"; exit 0; }
+
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "LinkedIn token expires in $left day(s)" \
+            --body "Re-run the LinkedIn OAuth flow (scope: openid profile w_member_social), then update the LINKEDIN_ACCESS_TOKEN secret and the LINKEDIN_TOKEN_ISSUED variable. Close this issue afterwards."

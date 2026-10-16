@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLM content output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bad_tf", "good_tf", "why_it_matters", "post_en"],
+  "properties": {
+    "bad_tf": {"type": "string", "minLength": 20, "maxLength": 4000},
+    "good_tf": {"type": "string", "minLength": 20, "maxLength": 5000},
+    "why_it_matters": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {"type": "string", "minLength": 20, "maxLength": 220}
+    },
+    "post_en": {"type": "string", "minLength": 600, "maxLength": 1800}
+  }
+}

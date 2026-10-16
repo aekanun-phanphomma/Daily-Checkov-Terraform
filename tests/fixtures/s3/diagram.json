@@ -1,0 +1,75 @@
+{
+  "title": "S3: block public ACLs at the bucket",
+  "before": {
+    "nodes": [
+      {
+        "id": "dev",
+        "type": "user",
+        "label": "IAM principal"
+      },
+      {
+        "id": "bucket",
+        "type": "resource",
+        "label": "S3 bucket"
+      },
+      {
+        "id": "net",
+        "type": "internet",
+        "label": "Anonymous client"
+      }
+    ],
+    "edges": [
+      {
+        "from": "dev",
+        "to": "bucket",
+        "label": "s3:PutObjectAcl public-read"
+      },
+      {
+        "from": "net",
+        "to": "bucket",
+        "label": "HTTPS GetObject"
+      }
+    ],
+    "risk_callout": "One ACL call makes objects readable by anyone on the internet"
+  },
+  "after": {
+    "nodes": [
+      {
+        "id": "dev",
+        "type": "user",
+        "label": "IAM principal"
+      },
+      {
+        "id": "pab",
+        "type": "control",
+        "label": "Public access block"
+      },
+      {
+        "id": "net",
+        "type": "internet",
+        "label": "Anonymous client"
+      }
+    ],
+    "edges": [
+      {
+        "from": "dev",
+        "to": "pab",
+        "label": "s3:PutObjectAcl public-read",
+        "blocked": true
+      },
+      {
+        "from": "net",
+        "to": "pab",
+        "label": "HTTPS GetObject",
+        "blocked": true
+      }
+    ],
+    "control_callout": "S3 rejects public ACLs and ignores any that already exist"
+  },
+  "code_diff": [
+    "- block_public_acls = false",
+    "+ block_public_acls = true",
+    "- ignore_public_acls = false",
+    "+ ignore_public_acls = true"
+  ]
+}
