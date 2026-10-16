@@ -1,0 +1,28 @@
+{
+  "rule": {
+    "id": "CKV_AWS_53",
+    "cloud": "aws",
+    "resource": "aws_s3_bucket_public_access_block",
+    "priority": "P1",
+    "topic": "public-exposure",
+    "enabled": true
+  },
+  "check_name": "Ensure S3 bucket has block public ACLS enabled",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/aws/S3BlockPublicACLs.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/bc-aws-s3-19",
+  "model": "gemini-3.5-flash-lite",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-16",
+  "skipped_before": []
+}

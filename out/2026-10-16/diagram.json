@@ -1,0 +1,52 @@
+{
+  "title": "Enable S3 Block Public ACLs",
+  "before": {
+    "nodes": [
+      {
+        "id": "a",
+        "type": "internet",
+        "label": "Internet User"
+      },
+      {
+        "id": "b",
+        "type": "resource",
+        "label": "S3 Bucket"
+      }
+    ],
+    "edges": [
+      {
+        "from": "a",
+        "to": "b",
+        "label": "PutBucketAcl"
+      }
+    ],
+    "risk_callout": "Public ACLs are allowed, risking unintended data exposure."
+  },
+  "after": {
+    "nodes": [
+      {
+        "id": "a",
+        "type": "internet",
+        "label": "Internet User"
+      },
+      {
+        "id": "b",
+        "type": "resource",
+        "label": "S3 Bucket"
+      }
+    ],
+    "edges": [
+      {
+        "from": "a",
+        "to": "b",
+        "label": "PutBucketAcl",
+        "blocked": true
+      }
+    ],
+    "control_callout": "Block public ACLs is enabled, preventing unauthorized public access."
+  },
+  "code_diff": [
+    "- block_public_acls = false",
+    "+ block_public_acls = true"
+  ]
+}

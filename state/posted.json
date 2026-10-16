@@ -1,3 +1,11 @@
 {
-  "posts": []
+  "posts": [
+    {
+      "date": "2026-10-16",
+      "check_id": "CKV_AWS_53",
+      "cloud": "aws",
+      "linkedin": null,
+      "facebook": null
+    }
+  ]
 }
