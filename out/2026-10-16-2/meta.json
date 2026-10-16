@@ -1,0 +1,28 @@
+{
+  "rule": {
+    "id": "CKV_AZURE_10",
+    "cloud": "azure",
+    "resource": "azurerm_network_security_rule",
+    "priority": "P1",
+    "topic": "network-ingress",
+    "enabled": true
+  },
+  "check_name": "Ensure that SSH access is restricted from the internet",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/azure/NSGRuleSSHAccessRestricted.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-3",
+  "model": "gemini-3.8-flash",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-16",
+  "skipped_before": []
+}
