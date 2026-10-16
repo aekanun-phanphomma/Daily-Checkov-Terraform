@@ -209,7 +209,10 @@
         <div class="denied">DENIED</div>
         {% endif %}
       </div>
-      {{ node(b, key, go if (key == "before" and not edge.blocked) else false) }}
+      {#- Only what the traffic is after is "exposed"; a control or user it
+          passes through on the way is not. #}
+      {{ node(b, key, go if (key == "before" and not edge.blocked
+                             and b.type in ("resource", "service")) else false) }}
     </div>
     {% endfor %}
   </section>
