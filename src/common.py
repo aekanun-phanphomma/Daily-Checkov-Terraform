@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import subprocess
 import sys
@@ -85,6 +86,31 @@ def save_state(state: dict, path: Path = STATE_PATH) -> None:
 
 def entry_for(state: dict, date: str) -> dict | None:
     return next((p for p in state["posts"] if p["date"] == date), None)
+
+
+def entries_for_day(state: dict, date: str) -> list[dict]:
+    """Today's entry plus any extra manual posts (keys like 2026-10-16-2)."""
+    return [p for p in state["posts"]
+            if p["date"] == date or p["date"].startswith(date + "-")]
+
+
+def extra_posts_allowed() -> bool:
+    """ALLOW_EXTRA_POST=1: a manual run may publish a second post today.
+
+    Only the workflow_dispatch input sets it. The extra post gets its own
+    key (date-2, date-3, ...), so it has its own out/ folder and its own
+    per-platform ids, and every duplicate guard still applies to it.
+    """
+    return os.environ.get("ALLOW_EXTRA_POST", "") in ("1", "true")
+
+
+def next_key(state: dict, date: str) -> str:
+    if not entry_for(state, date):
+        return date
+    n = 2
+    while entry_for(state, f"{date}-{n}"):
+        n += 1
+    return f"{date}-{n}"
 
 
 def write_json(path: Path, data) -> None:

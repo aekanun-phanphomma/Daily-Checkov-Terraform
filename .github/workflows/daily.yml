@@ -15,6 +15,10 @@ on:
         description: "Force one check id, e.g. CKV_AWS_53 (testing)"
         type: string
         default: ""
+      allow_extra_post:
+        description: "Publish even if today already has a post (stored as <date>-2)"
+        type: boolean
+        default: false
 
 # Both jobs push to the default branch; two runs must never interleave.
 concurrency:
@@ -63,6 +67,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          ALLOW_EXTRA_POST: ${{ inputs.allow_extra_post && '1' || '' }}
           # Passed through env, never interpolated into the script, so a
           # crafted input cannot inject shell.
           RULE: ${{ inputs.rule }}
@@ -106,6 +111,7 @@ jobs:
     env:
       GENERATED: ${{ needs.generate.outputs.generated }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+      ALLOW_EXTRA_POST: ${{ inputs.allow_extra_post && '1' || '' }}
     steps:
       - uses: actions/checkout@v5
 

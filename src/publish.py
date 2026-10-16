@@ -33,7 +33,8 @@ from urllib.parse import quote
 
 import requests
 
-from common import (OUT_DIR, PLATFORMS, REPO_ROOT, entry_for, load_state, log,
+from common import (OUT_DIR, PLATFORMS, REPO_ROOT, entries_for_day, entry_for,
+                    extra_posts_allowed, load_state, log, next_key,
                     read_json, save_state, setup_logging, today)
 
 HTTP_TIMEOUT = 30
@@ -352,21 +353,28 @@ def configured(platform: str) -> bool:
 def cmd_stage(src: Path) -> int:
     date = today()
     state = load_state()
-    if entry_for(state, date):
+    if entry_for(state, date) and not extra_posts_allowed():
         log.info("%s already staged -- resuming", date)
         return 0
-    dest = OUT_DIR / date
+    # Re-running a failed extra-post job brings the same bundle back. Staging
+    # it again under date-3 would post the same rule a second time.
+    check_id = read_json(src / "meta.json")["rule"]["id"]
+    if any(e["check_id"] == check_id for e in entries_for_day(state, date)):
+        log.info("%s already staged today -- resuming", check_id)
+        return 0
+    key = next_key(state, date)           # the date, or date-2 for an extra post
+    dest = OUT_DIR / key
     if dest.exists():
         shutil.rmtree(dest)
     shutil.copytree(src, dest, ignore=shutil.ignore_patterns("card.html"))
     meta = read_json(dest / "meta.json")
-    (dest / "post.txt").write_text(compose_post(dest, date) + "\n", encoding="utf-8")
+    (dest / "post.txt").write_text(compose_post(dest, key) + "\n", encoding="utf-8")
     state["posts"].append({
-        "date": date, "check_id": meta["rule"]["id"], "cloud": meta["rule"]["cloud"],
+        "date": key, "check_id": meta["rule"]["id"], "cloud": meta["rule"]["cloud"],
         **{platform: None for platform in PLATFORMS},
     })
     save_state(state)
-    log.info("staged %s as out/%s", meta["rule"]["id"], date)
+    log.info("staged %s as out/%s", meta["rule"]["id"], key)
     return 0
 
 
@@ -381,11 +389,23 @@ def cmd_post(bundle: Path | None, dry_run: bool) -> int:
         return 0
 
     state = load_state()
-    entry = entry_for(state, date)
-    if not entry:
+    entries = entries_for_day(state, date)
+    if not entries:
         log.error("no state entry for %s -- run `stage` first", date)
         return 1
-    bundle = OUT_DIR / date
+    session = requests.Session()
+    session.headers["User-Agent"] = "checkov-daily/1.0 (+" + repo_url() + ")"
+    # Every entry of the day, so a re-run also finishes a half-posted extra.
+    errors = sum(post_entry(session, state, entry) for entry in entries)
+    return 1 if errors else 0
+
+
+def post_entry(session: requests.Session, state: dict, entry: dict) -> int:
+    """Post one staged entry to every platform still missing. Returns failures."""
+    if all(entry.get(platform) for platform in PLATFORMS):
+        log.info("%s: already posted everywhere", entry["date"])
+        return 0
+    bundle = OUT_DIR / entry["date"]
     text = (bundle / "post.txt").read_text(encoding="utf-8").strip()
     if len(linkedin_commentary(text)) > LINKEDIN_TEXT_LIMIT:
         log.error("post is %d chars after escaping, LinkedIn allows %d",
@@ -394,9 +414,7 @@ def cmd_post(bundle: Path | None, dry_run: bool) -> int:
     alt = read_json(bundle / "diagram.json")["title"] + " -- before/after diagram for " \
         + entry["check_id"]
 
-    session = requests.Session()
-    session.headers["User-Agent"] = "checkov-daily/1.0 (+" + repo_url() + ")"
-    errors = []
+    errors = 0
     for platform in PLATFORMS:
         if entry.get(platform):
             log.info("%s: already posted (%s)", platform, entry[platform])
@@ -409,12 +427,12 @@ def cmd_post(bundle: Path | None, dry_run: bool) -> int:
                        else send_facebook(session, text, bundle))
         except Exception as exc:
             log.error("%s: %s", platform, exc)
-            errors.append(platform)
+            errors += 1
             continue
         entry[platform] = post_id
         save_state(state)                 # immediately: see module docstring
-        log.info("%s: posted (%s)", platform, post_id)
-    return 1 if errors else 0
+        log.info("%s: posted %s (%s)", platform, entry["date"], post_id)
+    return errors
 
 
 def main() -> int:

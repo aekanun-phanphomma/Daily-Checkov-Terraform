@@ -33,7 +33,8 @@ import sys
 from pathlib import Path
 
 from common import (PROMPTS_DIR, REPO_ROOT, CheckInfo, Rule, check_source_code,
-                    checkov_checks, entry_for, load_catalog, load_state, log,
+                    checkov_checks, entry_for, extra_posts_allowed, load_catalog,
+                    load_state, log,
                     setup_logging, today, write_json)
 from gates import (PROVIDERS, GateFailure, gate_bad_fails, gate_diagram,
                    gate_good_passes, gate_post, gate_safety, gate_schema,
@@ -202,7 +203,7 @@ def main() -> int:
     date = today()
     state = load_state()
     dry_run = os.environ.get("DRY_RUN", "") in ("1", "true")
-    if entry_for(state, date) and not dry_run and not args.rule:
+    if entry_for(state, date) and not (dry_run or args.rule or extra_posts_allowed()):
         # Re-run of a day that already published (or half-published). The
         # publish job resumes from out/<date>/, so there is nothing to make.
         log.info("%s already has a state entry -- nothing to generate", date)
