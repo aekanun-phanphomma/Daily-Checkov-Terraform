@@ -146,12 +146,14 @@ def linkedin_author(session: requests.Session, token: str) -> str:
     return f"urn:li:person:{response.json()['sub']}"
 
 
-def send_linkedin(session: requests.Session, text: str, image: Path, alt: str) -> str:
-    """Three calls: initializeUpload -> PUT bytes -> POST /rest/posts."""
-    token = os.environ["LINKEDIN_ACCESS_TOKEN"].strip()
-    author = linkedin_author(session, token)
-    headers = _linkedin_headers(token)
+class MediaUploadFailed(RuntimeError):
+    """Uploading the media failed before any post existed: safe to fall back."""
 
+
+def _linkedin_image(session: requests.Session, token: str, author: str,
+                    image: Path, alt: str) -> dict:
+    """initializeUpload -> PUT bytes -> wait for AVAILABLE. Returns content.media."""
+    headers = _linkedin_headers(token)
     init = session.post("https://api.linkedin.com/rest/images?action=initializeUpload",
                         headers=headers, timeout=HTTP_TIMEOUT,
                         json={"initializeUploadRequest": {"owner": author}})
@@ -174,7 +176,83 @@ def send_linkedin(session: requests.Session, text: str, image: Path, alt: str) -
         if not status.ok or status.json().get("status") == "AVAILABLE":
             break
         time.sleep(3)
+    return {"id": image_urn, "altText": alt[:4000]}
 
+
+def _linkedin_video(session: requests.Session, token: str, author: str,
+                    video: Path, title: str) -> dict:
+    """initializeUpload -> PUT each part -> finalizeUpload -> wait for AVAILABLE.
+
+    Every failure here raises MediaUploadFailed: no post exists yet, so the
+    caller can fall back to the PNG without any risk of a duplicate.
+    """
+    headers = _linkedin_headers(token)
+    data = video.read_bytes()
+    try:
+        init = session.post(
+            "https://api.linkedin.com/rest/videos?action=initializeUpload",
+            headers=headers, timeout=HTTP_TIMEOUT,
+            json={"initializeUploadRequest": {"owner": author, "fileSizeBytes": len(data),
+                                              "uploadCaptions": False,
+                                              "uploadThumbnail": False}})
+        if not init.ok:
+            raise MediaUploadFailed(f"video initializeUpload {init.status_code}: "
+                                    f"{init.text[:300]}")
+        value = init.json()["value"]
+        video_urn = value["video"]
+
+        # Small files come back as one part; the API decides, not us.
+        etags = []
+        for part in value["uploadInstructions"]:
+            chunk = data[part["firstByte"]:part["lastByte"] + 1]
+            put = session.put(part["uploadUrl"], data=chunk, timeout=HTTP_TIMEOUT * 4,
+                              headers={"Content-Type": "application/octet-stream"})
+            if not put.ok or not put.headers.get("etag"):
+                raise MediaUploadFailed(f"video part upload {put.status_code}")
+            etags.append(put.headers["etag"])
+
+        done = session.post(
+            "https://api.linkedin.com/rest/videos?action=finalizeUpload",
+            headers=headers, timeout=HTTP_TIMEOUT,
+            json={"finalizeUploadRequest": {"video": video_urn,
+                                            "uploadToken": value.get("uploadToken", ""),
+                                            "uploadedPartIds": etags}})
+        if not done.ok:
+            raise MediaUploadFailed(f"video finalizeUpload {done.status_code}: "
+                                    f"{done.text[:300]}")
+
+        # Unlike images, a video that is still PROCESSING cannot be posted.
+        for _ in range(40):
+            status = session.get(f"https://api.linkedin.com/rest/videos/{quote(video_urn)}",
+                                 headers=headers, timeout=HTTP_TIMEOUT)
+            state = status.json().get("status") if status.ok else None
+            if state == "AVAILABLE":
+                return {"id": video_urn, "title": title[:200]}
+            if state == "PROCESSING_FAILED":
+                raise MediaUploadFailed("LinkedIn could not process the video")
+            time.sleep(3)
+        raise MediaUploadFailed("video still processing after 2 minutes")
+    except (requests.RequestException, KeyError, ValueError) as exc:
+        raise MediaUploadFailed(f"video upload: {exc!r}") from exc
+
+
+def send_linkedin(session: requests.Session, text: str, bundle: Path, alt: str) -> str:
+    """Upload the video (or the PNG if that fails), then create the post."""
+    token = os.environ["LINKEDIN_ACCESS_TOKEN"].strip()
+    author = linkedin_author(session, token)
+    headers = _linkedin_headers(token)
+
+    media = None
+    if (bundle / "card.mp4").exists():
+        try:
+            media = _linkedin_video(session, token, author, bundle / "card.mp4", alt)
+        except MediaUploadFailed as exc:
+            log.warning("linkedin: %s -- falling back to the PNG", exc)
+    if media is None:
+        media = _linkedin_image(session, token, author, bundle / "card.png", alt)
+
+    # Never retried and never followed by a fallback: if this call times out
+    # the post may already exist, and a second attempt would duplicate it.
     post = session.post("https://api.linkedin.com/rest/posts",
                         headers={**headers, "Content-Type": "application/json"},
                         timeout=HTTP_TIMEOUT, json={
@@ -183,7 +261,7 @@ def send_linkedin(session: requests.Session, text: str, image: Path, alt: str) -
         "visibility": "PUBLIC",
         "distribution": {"feedDistribution": "MAIN_FEED", "targetEntities": [],
                          "thirdPartyDistributionChannels": []},
-        "content": {"media": {"id": image_urn, "altText": alt[:4000]}},
+        "content": {"media": media},
         "lifecycleState": "PUBLISHED",
         "isReshareDisabledByAuthor": False,
     })
@@ -197,8 +275,32 @@ def send_linkedin(session: requests.Session, text: str, image: Path, alt: str) -
 # Facebook Page
 # --------------------------------------------------------------------------
 
-def send_facebook(session: requests.Session, text: str, image: Path) -> str:
-    """One call: POST /{page-id}/photos with the image and the caption.
+def _facebook_error(response: requests.Response) -> RuntimeError:
+    try:
+        error = response.json().get("error", {})
+    except ValueError:
+        error = {}
+    code, message = error.get("code"), error.get("message", response.text[:300])
+    if code == 190:
+        return RuntimeError(
+            f"Facebook token rejected (190): {message}. A Page token from a "
+            "long-lived user token does not expire on its own -- suspect the Meta "
+            "app being published, a password change, or revoked access.")
+    if code in (10, 200, 283):
+        return RuntimeError(
+            f"Facebook refused the post ({code}): {message}. Check that the token "
+            "is a Page token (Access Token Debugger: Type = Page) with "
+            "pages_manage_posts.")
+    return RuntimeError(f"Facebook {response.status_code} ({code}): {message}")
+
+
+def send_facebook(session: requests.Session, text: str, bundle: Path) -> str:
+    """POST /{page-id}/videos with the MP4, or /photos with the PNG.
+
+    On Facebook the upload *is* the post, so the fallback is narrower than
+    LinkedIn's: only an HTTP error answer (nothing was published) falls back
+    to the photo. A timeout or dropped connection is raised instead -- the
+    video may have been accepted, and a photo on top would be a duplicate.
 
     No escaping (Facebook has no inline-entity parser). The token goes in
     the form body, never the URL, so it cannot leak into logs that echo the
@@ -206,7 +308,22 @@ def send_facebook(session: requests.Session, text: str, image: Path) -> str:
     """
     token = os.environ["FACEBOOK_PAGE_TOKEN"].strip()
     page_id = os.environ["FACEBOOK_PAGE_ID"].strip()
-    with image.open("rb") as fh:
+    video = bundle / "card.mp4"
+    if video.exists():
+        with video.open("rb") as fh:
+            # graph-video.* is the host Meta documents for video uploads.
+            response = session.post(
+                f"https://graph-video.facebook.com/{FACEBOOK_API_VERSION}/{page_id}/videos",
+                data={"description": text, "access_token": token},
+                files={"source": ("card.mp4", fh, "video/mp4")},
+                timeout=HTTP_TIMEOUT * 6,
+            )
+        if response.ok:
+            return response.json().get("id", "unknown")
+        log.warning("facebook: video refused (%s) -- falling back to the PNG",
+                    _facebook_error(response))
+
+    with (bundle / "card.png").open("rb") as fh:
         response = session.post(
             f"https://graph.facebook.com/{FACEBOOK_API_VERSION}/{page_id}/photos",
             data={"message": text, "access_token": token},
@@ -216,23 +333,7 @@ def send_facebook(session: requests.Session, text: str, image: Path) -> str:
     if response.ok:
         body = response.json()
         return body.get("post_id") or body.get("id", "unknown")
-
-    try:
-        error = response.json().get("error", {})
-    except ValueError:
-        error = {}
-    code, message = error.get("code"), error.get("message", response.text[:300])
-    if code == 190:
-        raise RuntimeError(
-            f"Facebook token rejected (190): {message}. A Page token from a "
-            "long-lived user token does not expire on its own -- suspect the Meta "
-            "app being published, a password change, or revoked access.")
-    if code in (10, 200, 283):
-        raise RuntimeError(
-            f"Facebook refused the post ({code}): {message}. Check that the token "
-            "is a Page token (Access Token Debugger: Type = Page) with "
-            "pages_manage_posts.")
-    raise RuntimeError(f"Facebook {response.status_code} ({code}): {message}")
+    raise _facebook_error(response)
 
 
 # --------------------------------------------------------------------------
@@ -275,7 +376,8 @@ def cmd_post(bundle: Path | None, dry_run: bool) -> int:
         bundle = bundle or OUT_DIR / date
         text = compose_post(bundle, date)
         print(f"----- DRY RUN ({len(text)}/{LINKEDIN_TEXT_LIMIT} chars) -----\n{text}")
-        print(f"----- image: {bundle / 'card.png'} -----")
+        media = bundle / "card.mp4" if (bundle / "card.mp4").exists() else bundle / "card.png"
+        print(f"----- media: {media} -----")
         return 0
 
     state = load_state()
@@ -289,7 +391,6 @@ def cmd_post(bundle: Path | None, dry_run: bool) -> int:
         log.error("post is %d chars after escaping, LinkedIn allows %d",
                   len(linkedin_commentary(text)), LINKEDIN_TEXT_LIMIT)
         return 1
-    image = bundle / "card.png"
     alt = read_json(bundle / "diagram.json")["title"] + " -- before/after diagram for " \
         + entry["check_id"]
 
@@ -304,8 +405,8 @@ def cmd_post(bundle: Path | None, dry_run: bool) -> int:
             if not configured(platform):
                 log.info("%s: skipped (not configured)", platform)
                 continue
-            post_id = (send_linkedin(session, text, image, alt) if platform == "linkedin"
-                       else send_facebook(session, text, image))
+            post_id = (send_linkedin(session, text, bundle, alt) if platform == "linkedin"
+                       else send_facebook(session, text, bundle))
         except Exception as exc:
             log.error("%s: %s", platform, exc)
             errors.append(platform)

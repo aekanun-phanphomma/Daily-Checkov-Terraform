@@ -27,4 +27,6 @@ def test_s3_fixture_passes_every_gate(tmp_path):
     meta = json.loads((tmp_path / "meta.json").read_text())
     assert meta["guideline_url"].startswith("https://")
     assert (tmp_path / "card.png").stat().st_size > 10_000
+    # LinkedIn rejects videos under 75 KB.
+    assert (tmp_path / "card.mp4").stat().st_size > 75_000
     assert not (tmp_path / "bad" / ".terraform").exists()

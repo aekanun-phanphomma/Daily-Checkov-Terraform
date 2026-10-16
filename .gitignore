@@ -223,6 +223,10 @@ __marimo__/
 # Working bundle; publish.py copies it to out/<date>/ before committing.
 out/today/
 card.html
+# The video is regenerated from diagram.json at will and would add ~150 MB a
+# year to the repo. The post step reads it from disk in the same job; a
+# later re-run falls back to card.png, which is committed.
+out/*/card.mp4
 # Never commit provider binaries or state. gates.py runs init in a temp
 # copy, so these should not appear -- this is the backstop.
 .terraform/

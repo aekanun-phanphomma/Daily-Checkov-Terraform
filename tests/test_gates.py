@@ -103,6 +103,15 @@ def test_extra_keys_and_aligned_diff_lines_are_tidied_not_failed():
     assert "notes" not in content
 
 
+def test_unknown_icon_is_dropped_not_failed():
+    spec = copy.deepcopy(DIAGRAM)
+    spec["before"]["nodes"][1]["icon"] = "s3-logo"
+    spec["after"]["nodes"][1]["icon"] = "shield"
+    gate_diagram(spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    assert "icon" not in spec["before"]["nodes"][1]
+    assert spec["after"]["nodes"][1]["icon"] == "shield"
+
+
 def test_normalize_ignores_alignment_and_comments():
     assert normalize_code_line("  block_public_acls       = true # FIX: x") == \
         "block_public_acls = true"

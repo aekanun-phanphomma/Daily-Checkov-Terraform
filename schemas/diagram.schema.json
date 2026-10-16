@@ -12,7 +12,8 @@
       "properties": {
         "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,20}$"},
         "type": {"enum": ["internet", "user", "service", "resource", "control"]},
-        "label": {"type": "string", "minLength": 1, "maxLength": 24}
+        "label": {"type": "string", "minLength": 1, "maxLength": 24},
+        "icon": {"enum": ["globe", "user", "server", "bucket", "database", "shield", "firewall", "key", "function", "container", "cluster", "identity", "queue", "lock", "app", "network"]}
       }
     },
     "edge": {

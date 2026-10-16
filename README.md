@@ -23,14 +23,14 @@ GitHub Actions  (cron 30 0 * * *  ==  07:30 Asia/Bangkok)
 │   │    G5 good PASSES   <ID> passed + no P1 sibling failed + guideline URL
 │   ├─ LLM: diagram spec  nodes/edges/code_diff as JSON
 │   │    G7 diagram       ids consistent, code_diff copied from the code
-│   │    G8 render        HTML template -> 1200x1500 PNG, must fit
+│   │    G8 render        HTML template -> 9 s MP4 + PNG (1200x1500), must fit
 │   │   any gate fails -> repair prompt with the tool output
 │   │   (2 repairs per rule, shared) -> next rule (max 3 per run)
 │   └─ upload bundle  |  on failure: open a GitHub issue
 │
 └─ publish job  (social tokens, contents: write, never runs model output)
     ├─ stage: out/today -> out/<date>/, add state entry, commit + push
-    ├─ post LinkedIn (image upload + post), then Facebook Page (/photos)
+    ├─ post LinkedIn (video, PNG fallback), then Facebook Page (/videos, /photos fallback)
     │   each id saved to state/posted.json the moment it is confirmed
     └─ commit state (even if a platform failed, so re-runs never duplicate)
 ```
@@ -53,7 +53,11 @@ and re-run the proof: `checkov -d out/<date>/bad --check <ID>`.
   report. A rule without a guideline is skipped.
 - **No text-to-image models.** They misspell labels, draw arrows the wrong
   way and cannot be verified. The model writes a small JSON spec, G7 checks
-  it against the verified code, and a fixed template renders it.
+  it against the verified code, and a fixed template renders it -- as a
+  9-second MP4 where traffic visibly reaches the resource before the fix and
+  stops at a guard after it. Frames are seeked, not screen-recorded, so the
+  same spec always yields the same video. The MP4 is not committed (~150 MB
+  a year); the PNG is, and is the fallback if a video upload fails.
 - **Model output is untrusted code.** `terraform init` downloads whatever the
   configuration asks for, so G2 rejects modules, third-party providers,
   provisioners and external data *before* init runs. The job that runs it

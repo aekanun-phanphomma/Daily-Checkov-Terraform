@@ -347,6 +347,13 @@ def gate_diagram(spec: dict, bad_tf: str, good_tf: str) -> None:
         if isinstance(line, str) and line[:1] in "-+" and line[1:].strip() else line
         for line in spec.get("code_diff", [])
     ]
+    # An unknown icon only costs the picture its hint (render.py infers one),
+    # so it is dropped rather than repaired.
+    allowed = _schema("diagram.schema.json")["$defs"]["node"]["properties"]["icon"]["enum"]
+    for panel in ("before", "after"):
+        for node in spec.get(panel, {}).get("nodes", []):
+            if isinstance(node, dict) and "icon" in node and node["icon"] not in allowed:
+                del node["icon"]
     check_schema(spec, "diagram.schema.json", gate)
     _plain_english(json.dumps(spec, ensure_ascii=False), "diagram_spec", gate)
 

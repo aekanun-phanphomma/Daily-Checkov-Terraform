@@ -12,7 +12,7 @@ Return JSON with exactly this shape:
 {
   "title": "<= 60 chars",
   "before": {
-    "nodes": [{"id": "a", "type": "internet", "label": "<= 24 chars"}],
+    "nodes": [{"id": "a", "type": "internet", "label": "<= 24 chars", "icon": "globe"}],
     "edges": [{"from": "a", "to": "b", "label": "<= 28 chars"}],
     "risk_callout": "<= 90 chars"
   },
@@ -26,6 +26,13 @@ Return JSON with exactly this shape:
 
 Rules:
 - Node "type" is one of: internet, user, service, resource, control.
+- Optional node "icon", one of: globe, user, server, bucket, database,
+  shield, firewall, key, function, container, cluster, identity, queue,
+  lock, app, network. Set it on resource nodes so the picture shows what
+  the resource is (an S3 bucket -> bucket, a security group -> firewall).
+- The image animates traffic along every edge: in "before" it reaches the
+  target, in "after" a blocked edge stops at a guard. Order edges so the
+  story reads attacker -> resource.
 - 2 to 4 nodes per panel. Node ids are unique within a panel.
 - Every edge has "from" and "to" naming node ids in the same panel, and a
   "label" naming the protocol, port or API (for example "TCP 22 (SSH)" or
