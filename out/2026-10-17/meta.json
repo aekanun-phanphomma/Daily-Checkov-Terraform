@@ -1,0 +1,28 @@
+{
+  "rule": {
+    "id": "CKV_GCP_2",
+    "cloud": "gcp",
+    "resource": "google_compute_firewall",
+    "priority": "P1",
+    "topic": "network-ingress",
+    "enabled": true
+  },
+  "check_name": "Ensure Google compute firewall ingress does not allow unrestricted ssh access",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/gcp/GoogleComputeFirewallUnrestrictedIngress22.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-1",
+  "model": "gemini-3.8-flash",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-17",
+  "skipped_before": []
+}

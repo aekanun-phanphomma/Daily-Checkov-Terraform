@@ -1,0 +1,73 @@
+{
+  "title": "Restrict GCP Compute Firewall SSH Ingress",
+  "before": {
+    "nodes": [
+      {
+        "id": "internet",
+        "type": "internet",
+        "label": "Public Internet",
+        "icon": "globe"
+      },
+      {
+        "id": "firewall",
+        "type": "control",
+        "label": "Firewall Rule",
+        "icon": "firewall"
+      },
+      {
+        "id": "vm",
+        "type": "resource",
+        "label": "Compute Instance",
+        "icon": "server"
+      }
+    ],
+    "edges": [
+      {
+        "from": "internet",
+        "to": "firewall",
+        "label": "TCP 22 (SSH)"
+      },
+      {
+        "from": "firewall",
+        "to": "vm",
+        "label": "TCP 22 (SSH)"
+      }
+    ],
+    "risk_callout": "Unrestricted SSH from 0.0.0.0/0 exposes instances to brute-force attacks."
+  },
+  "after": {
+    "nodes": [
+      {
+        "id": "internet",
+        "type": "internet",
+        "label": "Public Internet",
+        "icon": "globe"
+      },
+      {
+        "id": "firewall",
+        "type": "control",
+        "label": "Firewall Rule",
+        "icon": "firewall"
+      },
+      {
+        "id": "vm",
+        "type": "resource",
+        "label": "Compute Instance",
+        "icon": "server"
+      }
+    ],
+    "edges": [
+      {
+        "from": "internet",
+        "to": "firewall",
+        "label": "TCP 22 (SSH)",
+        "blocked": true
+      }
+    ],
+    "control_callout": "Firewall ingress restricts SSH to authorized IP ranges instead of 0.0.0.0/0."
+  },
+  "code_diff": [
+    "- source_ranges = [\"0.0.0.0/0\"]",
+    "+ source_ranges = [\"35.235.240.0/20\"]"
+  ]
+}

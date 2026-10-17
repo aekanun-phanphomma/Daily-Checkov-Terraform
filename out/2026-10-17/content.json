@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"google_compute_firewall\" \"bad\" {\n  name    = \"allow-ssh\"\n  network = \"default\"\n\n  allow {\n    protocol = \"tcp\"\n    ports    = [\"22\"]\n  }\n\n  source_ranges = [\"0.0.0.0/0\"]\n}\n",
+  "good_tf": "resource \"google_compute_firewall\" \"bad\" {\n  name    = \"allow-ssh\"\n  network = \"default\"\n\n  allow {\n    protocol = \"tcp\"\n    ports    = [\"22\"]\n  }\n\n  source_ranges = [\"35.235.240.0/20\"] # FIX: restrict SSH to Identity-Aware Proxy CIDR\n}\n",
+  "why_it_matters": [
+    "Exposing SSH port 22 directly to 0.0.0.0/0 allows any entity on the internet to attempt network-level authentication against your compute instances.",
+    "Automated scanners continuously target open SSH ports with credential brute-forcing, dictionary attacks, and SSH daemon exploits.",
+    "Restricting ingress rules ensures that SSH management traffic is limited to designated administrative subnets or private relay proxies like Google Cloud IAP."
+  ],
+  "post_en": "Publicly exposing SSH ports invites constant brute-force attacks and vulnerability scanning across your infrastructure.\n\nCheckov check CKV_GCP_2 evaluates google_compute_firewall resources to ensure ingress rules do not open port 22 to the public internet using unrestricted source CIDRs.\n\nWhen a firewall rule grants unrestricted ingress to port 22, any external actor can communicate directly with your virtual machine instances. Internet-facing SSH services face continuous password spraying and exploitation attempts targeting host access. Restricting ingress access prevents direct scanning and keeps your instances hidden from untrusted networks.\n\nTo resolve this issue, replace 0.0.0.0/0 in the source_ranges argument with trusted management subnets or the Google Cloud Identity-Aware Proxy range 35.235.240.0/20.\n\nHow do you manage administrative remote access into your private compute workloads without public IP exposure?"
+}
