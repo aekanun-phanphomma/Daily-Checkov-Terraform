@@ -1,0 +1,73 @@
+{
+  "title": "Restrict SSH Ingress to Private CIDR",
+  "before": {
+    "nodes": [
+      {
+        "id": "internet",
+        "type": "internet",
+        "label": "Public Internet",
+        "icon": "globe"
+      },
+      {
+        "id": "sg",
+        "type": "control",
+        "label": "Security Group",
+        "icon": "firewall"
+      },
+      {
+        "id": "ec2",
+        "type": "resource",
+        "label": "EC2 Instance",
+        "icon": "server"
+      }
+    ],
+    "edges": [
+      {
+        "from": "internet",
+        "to": "sg",
+        "label": "TCP 22 (SSH)"
+      },
+      {
+        "from": "sg",
+        "to": "ec2",
+        "label": "TCP 22 (SSH)"
+      }
+    ],
+    "risk_callout": "Open SSH on 0.0.0.0/0 exposes instances to internet-wide brute-force login attempts."
+  },
+  "after": {
+    "nodes": [
+      {
+        "id": "internet",
+        "type": "internet",
+        "label": "Public Internet",
+        "icon": "globe"
+      },
+      {
+        "id": "sg",
+        "type": "control",
+        "label": "Security Group",
+        "icon": "firewall"
+      },
+      {
+        "id": "ec2",
+        "type": "resource",
+        "label": "EC2 Instance",
+        "icon": "server"
+      }
+    ],
+    "edges": [
+      {
+        "from": "internet",
+        "to": "sg",
+        "label": "TCP 22 (SSH)",
+        "blocked": true
+      }
+    ],
+    "control_callout": "Restricting SSH ingress to private CIDR blocks blocks unauthorized internet traffic."
+  },
+  "code_diff": [
+    "- cidr_blocks = [\"0.0.0.0/0\"]",
+    "+ cidr_blocks = [\"10.0.0.0/16\"]"
+  ]
+}

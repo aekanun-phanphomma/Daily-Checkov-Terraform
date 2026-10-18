@@ -1,0 +1,28 @@
+{
+  "rule": {
+    "id": "CKV_AWS_24",
+    "cloud": "aws",
+    "resource": "aws_security_group",
+    "priority": "P1",
+    "topic": "network-ingress",
+    "enabled": true
+  },
+  "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/aws/SecurityGroupUnrestrictedIngress22.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-18",
+  "skipped_before": []
+}
