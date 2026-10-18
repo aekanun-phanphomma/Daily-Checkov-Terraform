@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from common import Rule
-from gates import (GateFailure, gate_diagram, gate_post, gate_safety, gate_schema,
+from gates import (GateFailure, gate_diagram, gate_fresh, gate_post, gate_safety, gate_schema,
                    normalize_code_line)
 
 FIXTURE = Path(__file__).parent / "fixtures" / "s3"
@@ -77,17 +77,25 @@ def test_code_diff_must_come_from_the_code():
         gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
 
 
-def test_after_panel_needs_a_blocked_edge():
+def test_roles_must_be_different_things():
+    # The old card drew "NSG Rule -> NSG Rule": one thing guarding itself.
     spec = copy.deepcopy(DIAGRAM)
-    for edge in spec["after"]["edges"]:
-        edge.pop("blocked")
-    assert "blocked" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    spec["target"]["label"] = "public  ACCESS block"
+    assert "same label" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    spec = copy.deepcopy(DIAGRAM)
+    spec["ally"] = {"label": "Anonymous client"}
+    assert "same label" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
 
 
-def test_edges_must_reference_nodes():
+def test_spec_is_one_path_not_a_graph():
+    # Free-form nodes/edges let the model draw pictures the story template
+    # cannot tell; the schema now only has the roles the card draws.
     spec = copy.deepcopy(DIAGRAM)
-    spec["before"]["edges"][0]["to"] = "ghost"
-    assert "ghost" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    spec.pop("gate")
+    assert "gate" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    spec = copy.deepcopy(DIAGRAM)
+    spec["attacker"]["type"] = "control"
+    assert "control" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
 
 
 def test_extra_keys_and_aligned_diff_lines_are_tidied_not_failed():
@@ -103,15 +111,35 @@ def test_extra_keys_and_aligned_diff_lines_are_tidied_not_failed():
     assert "notes" not in content
 
 
-def test_unknown_icon_is_dropped_not_failed():
-    spec = copy.deepcopy(DIAGRAM)
-    spec["before"]["nodes"][1]["icon"] = "s3-logo"
-    spec["after"]["nodes"][1]["icon"] = "shield"
-    gate_diagram(spec, CONTENT["bad_tf"], CONTENT["good_tf"])
-    assert "icon" not in spec["before"]["nodes"][1]
-    assert spec["after"]["nodes"][1]["icon"] == "shield"
-
-
 def test_normalize_ignores_alignment_and_comments():
     assert normalize_code_line("  block_public_acls       = true # FIX: x") == \
         "block_public_acls = true"
+
+
+# G6b: the seams that made the first posts read alike.
+RECENT = [
+    "Leaving SSH exposed to the public internet creates a vector.\n\nBody.\n\n"
+    "How do you currently verify management ports are private?",
+]
+
+
+@pytest.mark.parametrize("post, expected", [
+    ("Exposing port 22 invites attacks.\n\nBody text here.", "stock word"),
+    ("Port 22 was open.\n\nCheckov check CKV_AWS_24 evaluates security groups.", "formula"),
+    ("Leaving nothing to chance.\n\nBody.", "stock word"),
+    ("Port 22 was open.\n\nBody.\n\nHow do you currently audit this?", "closing"),
+])
+def test_post_must_not_reuse_recent_seams(post, expected):
+    assert expected in fails(gate_fresh, post, RECENT)
+
+
+def test_first_word_must_differ_from_recent_openings():
+    recent = ["Port 22 sat open on a test VM.\n\nBody.\n\nWould CI catch it?"]
+    assert "first word" in fails(gate_fresh, "Port 3389 too.\n\nBody.\n\nThoughts?", recent)
+    gate_fresh("One wildcard did it.\n\nBody.\n\nThoughts?", recent)
+
+
+def test_fresh_post_passes_with_and_without_history():
+    post = "One wildcard in source_address_prefix.\n\nStep 1: a scan.\n\nWould your pipeline stop it?"
+    gate_fresh(post, RECENT)
+    gate_fresh(post, [])

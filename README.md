@@ -12,18 +12,21 @@ GitHub Actions  (cron 30 0 * * *  ==  07:30 Asia/Bangkok)
 │
 ├─ generate job  (Gemini key only, read-only repo, no social tokens)
 │   ├─ select rule        catalog/rules.yaml minus state/posted.json,
-│   │                     P1 first, rotating AWS -> Azure -> GCP
+│   │                     P1 first, rotating AWS -> Azure -> GCP,
+│   │                     a topic the last 3 posts covered waits its turn
 │   ├─ LLM: content       bad_tf, good_tf, why_it_matters, post_en
+│   │                     in today's format (5 rotate, prompts/formats/)
 │   │    G1 schema        jsonschema; "UNKNOWN" -> skip rule
 │   │    G6 post text     plain English, no URLs/hashtags/emoji/code
+│   │    G6b fresh        no stock opener/formula line, not the last posts' open/close
 │   │    G2 safety        HCL parses; no module/provider/provisioner/
 │   │                     external data; only aws_/azurerm_/google_ types
 │   │    G3 terraform     init -backend=false + validate (temp copy), fmt
 │   │    G4 bad FAILS     checkov --check <ID>  -> in failed_checks
 │   │    G5 good PASSES   <ID> passed + no P1 sibling failed + guideline URL
-│   ├─ LLM: diagram spec  nodes/edges/code_diff as JSON
-│   │    G7 diagram       ids consistent, code_diff copied from the code
-│   │    G8 render        HTML template -> 9 s MP4 + PNG (1200x1500), must fit
+│   ├─ LLM: diagram spec  attacker -> gate -> target (+ ally), code_diff
+│   │    G7 diagram       roles distinct, code_diff copied from the code
+│   │    G8 render        story template -> 12 s MP4 + PNG (1200x1500), must fit
 │   │   any gate fails -> repair prompt with the tool output
 │   │   (2 repairs per rule, shared) -> next rule (max 3 per run)
 │   └─ upload bundle  |  on failure: open a GitHub issue
@@ -53,11 +56,48 @@ and re-run the proof: `checkov -d out/<date>/bad --check <ID>`.
   report. A rule without a guideline is skipped.
 - **No text-to-image models.** They misspell labels, draw arrows the wrong
   way and cannot be verified. The model writes a small JSON spec, G7 checks
-  it against the verified code, and a fixed template renders it -- as a
-  9-second MP4 where traffic visibly reaches the resource before the fix and
-  stops at a guard after it. Frames are seeked, not screen-recorded, so the
-  same spec always yields the same video. The MP4 is not committed (~150 MB
-  a year); the PNG is, and is the fallback if a video upload fails.
+  it against the verified code, and a fixed template renders it. Frames are
+  seeked, not screen-recorded, so the same spec always yields the same video.
+  The MP4 is not committed (~150 MB a year); the PNG is, and is the fallback
+  if a video upload fails.
+- **One stage, one story.** The 12-second video is a single scene, not a
+  before/after pair of panels: traffic floods through the open gate and the
+  target is EXPOSED, the bad line is struck out and the fix types in,
+  Checkov flips FAILED -> PASSED, then the same attack bursts on the closed
+  gate while the allowed source still gets through. The change happens where
+  the viewer is already looking, and frame 0 already shows the bad line, so
+  the feed thumbnail is never a blank card. The spec has exactly the roles
+  the scene draws (attacker, gate, target, optional ally), so the model
+  cannot describe a picture the template cannot tell -- the old free-form
+  graph produced "NSG rule -> NSG rule". The values on the gate come from
+  code_diff, which G7 has matched against the code.
+- **Variety is designed in, not hoped for.** The first four posts read
+  alike, yet their word-trigram overlap was at most 0.08: what repeated was
+  structure (a "Leaving/Exposing ..." hook, a "Checkov check CKV_X evaluates
+  ..." paragraph, a "How do you ...?" closer) and topic (three SSH posts in
+  a row, because every cloud's first P1 rule was SSH). So three mechanisms,
+  each aimed at one of those: five post formats in turn (attacker's
+  timeline, code review comment, one-line fix, myth vs fact, inside the
+  check), a selector that makes a recently covered topic wait within its
+  cloud, and G6b, which rejects the stock openers and the formula line and
+  a post that opens or closes the way one of the last four did (four, not
+  more: "Myth:" must not collide with the myth post one cycle earlier).
+  Scenarios are allowed as long as they are plainly hypothetical; facts,
+  numbers and names still are not.
+- **Scene kits per topic.** The log and stamps say what the fix actually
+  does: a security group DENYs, a public-access block returns 403, IAM
+  goes OVER-PRIVILEGED -> LEAST PRIVILEGE. Encryption and logging do not
+  stop the request, so their scenes keep the traffic flowing after the fix
+  (CIPHERTEXT, LOGGED) instead of drawing a block that would teach the
+  wrong thing. A test fails if a catalog topic has no kit.
+- **Official cloud icons, picked by code.** `catalog/icons.yaml` maps each
+  resource type to the AWS or Azure architecture icon, and a test fails a PR
+  that adds a rule without one. The vendors license the packs for diagrams,
+  not redistribution, so they are not in the repo: CI downloads each pack,
+  accepts it only if its sha256 matches the pinned one, and extracts just the
+  mapped files. Icons are drawn unmodified; EXPOSED/PROTECTED effects go on
+  the frame around them. No pack (or GCP, which has none yet) means neutral
+  icons and a warning, never a missed post.
 - **Model output is untrusted code.** `terraform init` downloads whatever the
   configuration asks for, so G2 rejects modules, third-party providers,
   provisioners and external data *before* init runs. The job that runs it
@@ -100,6 +140,10 @@ gh variable set LINKEDIN_TOKEN_ISSUED --body 2026-10-16   # day the token was is
 # optional overrides, no commit needed:
 gh variable set GEMINI_MODEL     --body "gemini-3.7-flash,gemini-3.5-flash"
 gh variable set LINKEDIN_VERSION --body 202601
+# official icons (optional): the pack download URLs; sha256 is pinned in catalog/icons.yaml
+# (from aws.amazon.com/architecture/icons and learn.microsoft.com/azure/architecture/icons)
+gh variable set AWS_ICONS_URL   --body "https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip"
+gh variable set AZURE_ICONS_URL --body "https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V24.zip"
 ```
 
 `linkedin-token-check` opens an issue when the token has less than 10 days
@@ -116,6 +160,8 @@ without committing or posting anything. Untick it to publish for real.
 ```bash
 uv venv --python 3.12 .venv && uv pip install --python .venv -r requirements.txt
 .venv/Scripts/python -m playwright install chromium     # Linux/macOS: .venv/bin/python
+
+python src/icons.py extract ~/Downloads/Icon-package_*.zip ~/Downloads/Azure_Public_Service_Icons_*.zip
 
 python -m pytest -q                       # fast tests incl. catalog drift
 RUN_SLOW=1 python -m pytest -q            # + end-to-end on the S3 fixture
@@ -135,20 +181,25 @@ python src/select_rule.py                 # preview the queue
 | LinkedIn 426 | Version retired | Set `LINKEDIN_VERSION` to a current `YYYYMM` |
 | Bump Checkov | `tests/test_catalog.py` flags IDs that moved | Fix the catalog, then bump |
 | Catalog exhausted | generate exits 1 → issue | Add rules (verify with `checkov --list`) |
+| Warning "aws icons unavailable" | Card uses neutral icons | Vendor shipped a new pack: download it, re-pin `sha256` in `catalog/icons.yaml`, check the mapped paths still exist |
 
 ## Layout
 
 ```text
 catalog/rules.yaml        curated rules (verified against pinned Checkov)
+catalog/icons.yaml        resource type -> official icon, pinned pack hashes
 state/posted.json         history, one entry per day, ids per platform
 prompts/                  system, content, diagram, repair
+prompts/formats/          the five post formats, one per day in turn
 schemas/                  content + diagram JSON schemas
 src/select_rule.py        catalog + state -> ordered candidates
 src/generate.py           LLM calls, repair loop, rule fallback
 src/gates.py              G1-G7
-src/render.py             G8: spec -> HTML -> PNG (Playwright)
+src/render.py             G8: spec -> story HTML -> MP4 + PNG (Playwright)
+src/icons.py              verify icon packs, extract the mapped icons
 src/publish.py            stage, LinkedIn, Facebook
-templates/diagram.html
+templates/story.html      the 12 s storyboard
+icons/vendor/             extracted icons (gitignored)
 tests/                    unit tests + S3 fixture end-to-end
 out/<date>/               published bundles: bad/ good/ card.png post.txt meta.json
 ```

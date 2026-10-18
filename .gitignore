@@ -227,6 +227,9 @@ card.html
 # year to the repo. The post step reads it from disk in the same job; a
 # later re-run falls back to card.png, which is committed.
 out/*/card.mp4
+# Vendor icon files, extracted from the pinned packs by src/icons.py. The
+# vendors license them for diagrams, not for redistribution in this repo.
+icons/vendor/
 # Never commit provider binaries or state. gates.py runs init in a temp
 # copy, so these should not appear -- this is the backstop.
 .terraform/

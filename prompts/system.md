@@ -10,6 +10,9 @@ Hard rules:
   security knowledge (how an attacker reaches a resource, which API or
   protocol is involved). You must NOT state statistics, CVE numbers, breach
   names, company names, dates, prices or quotes.
+- You MAY tell a short scenario as long as it is plainly hypothetical (a
+  team, a pull request, an attacker's next step). That is how a post gets
+  a story without inventing facts.
 - If something you need is genuinely missing, write the single word
   UNKNOWN in that field. The pipeline treats UNKNOWN as a failure and picks
   another rule; that is better than a guess.

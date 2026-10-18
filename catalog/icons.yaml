@@ -1,0 +1,96 @@
+# Terraform resource type -> official cloud architecture icon.
+#
+# Code picks the icon from the resource type; the model never does. A cloud
+# with no package here (GCP for now) or a run without the packages falls
+# back to the neutral line icons in templates/story.html -- an icon is never
+# a reason to skip a post.
+#
+# The packs are NOT committed: the vendors license them for diagrams and
+# documentation, not for redistribution in someone else's public repo.
+# `python src/icons.py fetch` downloads each pack from the URL in
+# AWS_ICONS_URL / AZURE_ICONS_URL (repo variables), refuses it unless the
+# sha256 below matches, and extracts only the files mapped here into
+# icons/vendor/ (gitignored). Locally: `python src/icons.py extract <zip>...`.
+#
+# Icons are drawn as shipped -- no recolour, crop or rotation (Microsoft's
+# terms say so explicitly). Every state effect (EXPOSED, PROTECTED, the fix
+# ring) goes on the frame around the icon, never on the icon.
+#
+#   icon: what the attack is after (the target)
+#   gate: set when the resource IS the control (security group, NSG rule,
+#         firewall rule); `icon` is then what that control protects, so the
+#         picture reads  Internet -> [NSG] -> VM.
+
+packages:
+  aws:
+    file: Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip
+    sha256: d2d166c453526471749d520e0db022c459abef759d2946cf2dd1d1c992dc6526
+    root: ""
+    extras:
+      subnet: Architecture-Group-Icons_07312026/Private-subnet_32.svg
+  azure:
+    file: Azure_Public_Service_Icons_V24.zip
+    sha256: 921594ccd1bf3d9c0a1bd7b6d924e050551a59342f2b353bb74bdcf761c35141
+    root: Azure_Public_Service_Icons/
+    extras:
+      subnet: Icons/networking/02742-icon-service-Subnet.svg
+
+resources:
+  # AWS: the Architecture-Service icons (coloured squares) read far better
+  # at node size than the thin Resource glyphs; Resource icons are used only
+  # where no service icon fits (IAM role/permissions, ALB, NACL).
+  aws:
+    aws_cloudfront_distribution:       {icon: Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Amazon-CloudFront_64.svg}
+    aws_cloudtrail:                    {icon: Architecture-Service-Icons_07312026/Arch_Management-Tools/64/Arch_AWS-CloudTrail_64.svg}
+    aws_db_instance:                   {icon: Architecture-Service-Icons_07312026/Arch_Databases/64/Arch_Amazon-RDS_64.svg}
+    aws_db_snapshot:                   {icon: Architecture-Service-Icons_07312026/Arch_Databases/64/Arch_Amazon-RDS_64.svg}
+    aws_ebs_volume:                    {icon: Architecture-Service-Icons_07312026/Arch_Storage/64/Arch_Amazon-Elastic-Block-Store_64.svg}
+    aws_ecr_repository:                {icon: Architecture-Service-Icons_07312026/Arch_Containers/64/Arch_Amazon-Elastic-Container-Registry_64.svg}
+    aws_ecr_repository_policy:         {icon: Architecture-Service-Icons_07312026/Arch_Containers/64/Arch_Amazon-Elastic-Container-Registry_64.svg}
+    aws_eks_cluster:                   {icon: Architecture-Service-Icons_07312026/Arch_Containers/64/Arch_Amazon-Elastic-Kubernetes-Service_64.svg}
+    aws_iam_policy:                    {icon: Resource-Icons_07312026/Res_Security-Identity/Res_AWS-Identity-Access-Management_Permissions_48.svg}
+    aws_iam_policy_document:           {icon: Resource-Icons_07312026/Res_Security-Identity/Res_AWS-Identity-Access-Management_Permissions_48.svg}
+    aws_iam_role:                      {icon: Resource-Icons_07312026/Res_Security-Identity/Res_AWS-Identity-Access-Management_Role_48.svg}
+    aws_instance:                      {icon: Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_Amazon-EC2_64.svg}
+    aws_launch_template:               {icon: Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_Amazon-EC2_64.svg}
+    aws_kms_key:                       {icon: Architecture-Service-Icons_07312026/Arch_Security-Identity/64/Arch_AWS-Key-Management-Service_64.svg}
+    aws_lambda_function:               {icon: Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_AWS-Lambda_64.svg}
+    aws_lambda_function_url:           {icon: Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_AWS-Lambda_64.svg}
+    aws_lambda_permission:             {icon: Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_AWS-Lambda_64.svg}
+    aws_lb_listener:                   {icon: Resource-Icons_07312026/Res_Networking-Content-Delivery/Res_Elastic-Load-Balancing_Application-Load-Balancer_48.svg}
+    aws_network_acl_rule:              {icon: Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Amazon-Virtual-Private-Cloud_64.svg,
+                                        gate: Resource-Icons_07312026/Res_Networking-Content-Delivery/Res_Amazon-VPC_Network-Access-Control-List_48.svg}
+    aws_opensearch_domain:             {icon: Architecture-Service-Icons_07312026/Arch_Analytics/64/Arch_Amazon-OpenSearch-Service_64.svg}
+    aws_redshift_cluster:              {icon: Architecture-Service-Icons_07312026/Arch_Analytics/64/Arch_Amazon-Redshift_64.svg}
+    aws_s3_bucket_policy:              {icon: Architecture-Service-Icons_07312026/Arch_Storage/64/Arch_Amazon-Simple-Storage-Service_64.svg}
+    aws_s3_bucket_public_access_block: {icon: Architecture-Service-Icons_07312026/Arch_Storage/64/Arch_Amazon-Simple-Storage-Service_64.svg}
+    # The pack has no security-group icon; its generic firewall is closest.
+    aws_security_group:                {icon: Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_Amazon-EC2_64.svg,
+                                        gate: Resource-Icons_07312026/Res_General-Icons/Res_48_Dark/Res_Firewall_48_Dark.svg}
+    aws_sns_topic:                     {icon: Architecture-Service-Icons_07312026/Arch_Application-Integration/64/Arch_Amazon-Simple-Notification-Service_64.svg}
+    aws_sqs_queue:                     {icon: Architecture-Service-Icons_07312026/Arch_Application-Integration/64/Arch_Amazon-Simple-Queue-Service_64.svg}
+    aws_sqs_queue_policy:              {icon: Architecture-Service-Icons_07312026/Arch_Application-Integration/64/Arch_Amazon-Simple-Queue-Service_64.svg}
+    aws_subnet:                        {icon: Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Amazon-Virtual-Private-Cloud_64.svg}
+
+  azure:
+    azurerm_api_management:            {icon: Icons/devops/10042-icon-service-API-Management-Services.svg}
+    azurerm_cognitive_account:         {icon: Icons/ai + machine learning/10162-icon-service-Cognitive-Services.svg}
+    azurerm_container_registry:        {icon: Icons/containers/10105-icon-service-Container-Registries.svg}
+    azurerm_cosmosdb_account:          {icon: Icons/databases/10121-icon-service-Azure-Cosmos-DB.svg}
+    azurerm_data_factory:              {icon: Icons/analytics/10126-icon-service-Data-Factories.svg}
+    azurerm_key_vault:                 {icon: Icons/security/10245-icon-service-Key-Vaults.svg}
+    azurerm_key_vault_key:             {icon: Icons/security/10245-icon-service-Key-Vaults.svg}
+    azurerm_key_vault_secret:          {icon: Icons/security/10245-icon-service-Key-Vaults.svg}
+    azurerm_kubernetes_cluster:        {icon: Icons/containers/10023-icon-service-Kubernetes-Services.svg}
+    azurerm_linux_virtual_machine:     {icon: Icons/compute/10021-icon-service-Virtual-Machine.svg}
+    azurerm_linux_web_app:             {icon: Icons/app services/10035-icon-service-App-Services.svg}
+    azurerm_mssql_firewall_rule:       {icon: Icons/databases/10132-icon-service-SQL-Server.svg,
+                                        gate: Icons/networking/10084-icon-service-Firewalls.svg}
+    azurerm_mssql_server:              {icon: Icons/databases/10132-icon-service-SQL-Server.svg}
+    azurerm_mysql_flexible_server:     {icon: Icons/databases/10122-icon-service-Azure-Database-MySQL-Server.svg}
+    azurerm_network_security_rule:     {icon: Icons/compute/10021-icon-service-Virtual-Machine.svg,
+                                        gate: Icons/networking/10067-icon-service-Network-Security-Groups.svg}
+    azurerm_network_watcher_flow_log:  {icon: Icons/networking/10066-icon-service-Network-Watcher.svg}
+    azurerm_redis_cache:               {icon: Icons/databases/10137-icon-service-Cache-Redis.svg}
+    azurerm_role_definition:           {icon: Icons/identity/10340-icon-service-Entra-Identity-Roles-and-Administrators.svg}
+    azurerm_storage_account:           {icon: Icons/storage/10086-icon-service-Storage-Accounts.svg}

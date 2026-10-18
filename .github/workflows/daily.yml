@@ -61,6 +61,15 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
+      # Official AWS/Azure icons. Optional: without the variables, or if a
+      # pack's sha256 no longer matches catalog/icons.yaml, the card uses
+      # its neutral icons and the run only gets a warning annotation.
+      - name: Fetch cloud icon packs
+        env:
+          AWS_ICONS_URL: ${{ vars.AWS_ICONS_URL }}
+          AZURE_ICONS_URL: ${{ vars.AZURE_ICONS_URL }}
+        run: python src/icons.py fetch
+
       - name: Generate and verify (gates G1-G8)
         id: gen
         env:
