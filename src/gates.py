@@ -13,6 +13,8 @@ to the next rule instead of burning a repair on it.
   G5  good passes   checkov on good/: <ID> passed, and no P1 check for the
                     same resource type failed; guideline URL present
   G6  post text     English, plain, no URLs/hashtags/emoji, length bounds
+  G6b fresh         no stock opener or formula line; does not open or
+                    close the way the last few posts did
   G7  diagram       schema, distinct role labels, code_diff copied from the code
   G8  render        the spec fits the 1200x1500 card (in render.py)
 """
@@ -313,13 +315,54 @@ def _plain_english(text: str, where: str, gate: str) -> None:
                               "English and the pipeline adds links and hashtags")
 
 
-def gate_post(content: dict) -> None:
+def gate_post(content: dict, recent: list[str] = ()) -> None:
     gate = "G6 post text"
     _plain_english(content["post_en"], "post_en", gate)
     if "```" in content["post_en"] or "resource \"" in content["post_en"]:
         raise GateFailure(gate, "post_en contains code; code lives in the image")
     for i, line in enumerate(content["why_it_matters"]):
         _plain_english(line, f"why_it_matters[{i}]", gate)
+    gate_fresh(content["post_en"], recent)
+
+
+# What made the first posts read alike was structure, not wording: word-
+# trigram overlap between them was at most 0.08, yet three of four opened
+# "Leaving/Exposing ..." and every one had a "Checkov check CKV_X
+# evaluates ..." paragraph and a "How do you ..." closer. So G6b checks
+# those seams, not text similarity.
+STOCK_OPENERS = re.compile(r"^(leaving|exposing|publicly|unrestricted|misconfigured|"
+                           r"imagine|did you know|in today's)\b", re.I)
+FORMULA_LINE = re.compile(r"^checkov (check|rule) CKV_\w+ (evaluates|inspects|flags|checks|"
+                          r"ensures|verifies)", re.I | re.M)
+
+
+def _lines(text: str) -> list[str]:
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def _words(line: str, n: int) -> tuple[str, ...]:
+    return tuple(re.findall(r"[a-z0-9']+", line.lower())[:n])
+
+
+def gate_fresh(post: str, recent: list[str]) -> None:
+    """G6b: today's post must not open or close the way recent ones did."""
+    gate = "G6b fresh"
+    lines = _lines(post)
+    if STOCK_OPENERS.match(lines[0]):
+        raise GateFailure(gate, f"first line opens with a stock word: {lines[0][:60]!r}")
+    if FORMULA_LINE.search(post):
+        raise GateFailure(gate, "post contains the 'Checkov check CKV_X evaluates ...' "
+                          "formula line; say what the check fails in plain words")
+    for other in recent:
+        other_lines = _lines(other)
+        if not other_lines:
+            continue
+        if _words(lines[0], 1) == _words(other_lines[0], 1):
+            raise GateFailure(gate, f"first word repeats a recent post's opening "
+                              f"({other_lines[0][:60]!r}); open differently")
+        if len(lines) > 1 and _words(lines[-1], 3) == _words(other_lines[-1], 3):
+            raise GateFailure(gate, f"last line repeats a recent post's closing "
+                              f"({other_lines[-1][:60]!r}); close differently")
 
 
 # --------------------------------------------------------------------------

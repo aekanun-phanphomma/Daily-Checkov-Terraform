@@ -62,3 +62,25 @@ def test_model_icon_wins_and_other_types_use_their_default():
     assert pick_icon({"type": "resource", "label": "x", "icon": "queue"}, "aws_s3_bucket") == "queue"
     assert pick_icon({"type": "internet", "label": "Anyone"}, "aws_s3_bucket") == "globe"
     assert set(TYPE_ICON.values()) <= ICONS
+
+
+def test_every_catalog_topic_has_a_scene_kit():
+    from common import load_catalog
+    from render import KIT_OF_TOPIC, KITS
+    missing = sorted({r.topic for r in load_catalog()} - set(KIT_OF_TOPIC))
+    assert not missing, f"add to KIT_OF_TOPIC: {missing}"
+    assert set(KIT_OF_TOPIC.values()) <= set(KITS)
+
+
+def test_fixes_that_do_not_block_are_not_drawn_as_blocking():
+    # Logging records the call; encryption makes the read useless. Neither
+    # stops the request, so the after-scene must not show it stopped.
+    for topic in ("logging", "encryption-at-rest", "transport-security"):
+        assert build_story(DIAGRAM, {**RULE, "topic": topic})["kit"]["blocks"] is False
+    assert build_story(DIAGRAM, {**RULE, "topic": "network-ingress"})["kit"]["blocks"] is True
+
+
+def test_log_column_fits_the_longest_source():
+    spec = {**DIAGRAM, "attacker": {"type": "user", "label": "Stolen access key"}}
+    row = build_story(spec, RULE)["log_before"][0]["text"]
+    assert row.startswith("Stolen access key  ")

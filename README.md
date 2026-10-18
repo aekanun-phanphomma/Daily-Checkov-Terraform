@@ -12,10 +12,13 @@ GitHub Actions  (cron 30 0 * * *  ==  07:30 Asia/Bangkok)
 │
 ├─ generate job  (Gemini key only, read-only repo, no social tokens)
 │   ├─ select rule        catalog/rules.yaml minus state/posted.json,
-│   │                     P1 first, rotating AWS -> Azure -> GCP
+│   │                     P1 first, rotating AWS -> Azure -> GCP,
+│   │                     a topic the last 3 posts covered waits its turn
 │   ├─ LLM: content       bad_tf, good_tf, why_it_matters, post_en
+│   │                     in today's format (5 rotate, prompts/formats/)
 │   │    G1 schema        jsonschema; "UNKNOWN" -> skip rule
 │   │    G6 post text     plain English, no URLs/hashtags/emoji/code
+│   │    G6b fresh        no stock opener/formula line, not the last posts' open/close
 │   │    G2 safety        HCL parses; no module/provider/provisioner/
 │   │                     external data; only aws_/azurerm_/google_ types
 │   │    G3 terraform     init -backend=false + validate (temp copy), fmt
@@ -68,6 +71,25 @@ and re-run the proof: `checkov -d out/<date>/bad --check <ID>`.
   cannot describe a picture the template cannot tell -- the old free-form
   graph produced "NSG rule -> NSG rule". The values on the gate come from
   code_diff, which G7 has matched against the code.
+- **Variety is designed in, not hoped for.** The first four posts read
+  alike, yet their word-trigram overlap was at most 0.08: what repeated was
+  structure (a "Leaving/Exposing ..." hook, a "Checkov check CKV_X evaluates
+  ..." paragraph, a "How do you ...?" closer) and topic (three SSH posts in
+  a row, because every cloud's first P1 rule was SSH). So three mechanisms,
+  each aimed at one of those: five post formats in turn (attacker's
+  timeline, code review comment, one-line fix, myth vs fact, inside the
+  check), a selector that makes a recently covered topic wait within its
+  cloud, and G6b, which rejects the stock openers and the formula line and
+  a post that opens or closes the way one of the last four did (four, not
+  more: "Myth:" must not collide with the myth post one cycle earlier).
+  Scenarios are allowed as long as they are plainly hypothetical; facts,
+  numbers and names still are not.
+- **Scene kits per topic.** The log and stamps say what the fix actually
+  does: a security group DENYs, a public-access block returns 403, IAM
+  goes OVER-PRIVILEGED -> LEAST PRIVILEGE. Encryption and logging do not
+  stop the request, so their scenes keep the traffic flowing after the fix
+  (CIPHERTEXT, LOGGED) instead of drawing a block that would teach the
+  wrong thing. A test fails if a catalog topic has no kit.
 - **Official cloud icons, picked by code.** `catalog/icons.yaml` maps each
   resource type to the AWS or Azure architecture icon, and a test fails a PR
   that adds a rule without one. The vendors license the packs for diagrams,
@@ -168,6 +190,7 @@ catalog/rules.yaml        curated rules (verified against pinned Checkov)
 catalog/icons.yaml        resource type -> official icon, pinned pack hashes
 state/posted.json         history, one entry per day, ids per platform
 prompts/                  system, content, diagram, repair
+prompts/formats/          the five post formats, one per day in turn
 schemas/                  content + diagram JSON schemas
 src/select_rule.py        catalog + state -> ordered candidates
 src/generate.py           LLM calls, repair loop, rule fallback

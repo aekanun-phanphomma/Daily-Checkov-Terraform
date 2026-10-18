@@ -36,3 +36,14 @@ def test_disabled_and_posted_rules_are_never_offered():
     state = {"posts": [{"check_id": "G1", "cloud": "gcp"}]}
     assert "OFF" not in ids(ordered_candidates(CATALOG, state))
     assert "G1" not in ids(ordered_candidates(CATALOG, state))
+
+
+def test_recent_topic_waits_its_turn_within_the_cloud():
+    # Each cloud's first P1 was SSH, so three SSH posts went out in a row.
+    catalog = [Rule("Z_SSH", "azure", "r", "P1", "network-ingress"),
+               Rule("Z_BLOB", "azure", "r", "P1", "public-exposure"),
+               Rule("G_SSH", "gcp", "r", "P1", "network-ingress"),
+               Rule("A_SSH", "aws", "r", "P1", "network-ingress")]
+    state = {"posts": [{"check_id": "A_SSH", "cloud": "aws"}]}
+    # Cloud rotation still wins (azure next), but not SSH again within it.
+    assert ids(ordered_candidates(catalog, state))[:2] == ["Z_BLOB", "Z_SSH"]

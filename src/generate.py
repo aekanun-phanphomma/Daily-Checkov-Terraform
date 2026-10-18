@@ -32,7 +32,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from common import (PROMPTS_DIR, REPO_ROOT, CheckInfo, Rule, check_source_code,
+from common import (OUT_DIR, PROMPTS_DIR, REPO_ROOT, CheckInfo, Rule, check_source_code,
                     checkov_checks, entry_for, extra_posts_allowed, load_catalog,
                     load_state, log,
                     setup_logging, today, write_json)
@@ -45,6 +45,22 @@ from select_rule import ordered_candidates
 
 MAX_REPAIRS = 2
 MAX_RULES_PER_RUN = 3
+# Post formats (prompts/formats/<name>.md), taken in turn by post count so
+# no two consecutive posts share a structure. Order mixes long and short.
+FORMATS = ("timeline", "review", "oneline", "myth", "inside")
+# G6b compares against this many recent posts. Kept below len(FORMATS):
+# a format's own fixed opening ("Myth:") must not trip it a cycle later.
+RECENT_POSTS = len(FORMATS) - 1
+
+
+def post_format(state: dict) -> str:
+    return FORMATS[len(state["posts"]) % len(FORMATS)]
+
+
+def recent_posts(n: int = RECENT_POSTS) -> list[str]:
+    """post_en of the last n published bundles (out/<date>[-k]/)."""
+    bundles = sorted(p for p in OUT_DIR.glob("*/content.json") if p.parent.name != "today")
+    return [json.loads(p.read_text(encoding="utf-8"))["post_en"] for p in bundles[-n:]]
 
 
 def fill(template: str, **values) -> str:
@@ -100,9 +116,10 @@ class Attempt:
     """One rule's run through the gates, with a shared repair budget."""
 
     def __init__(self, rule: Rule, info: CheckInfo, llm: LLM, catalog: list[Rule],
-                 bundle: Path):
+                 bundle: Path, fmt: str = FORMATS[0], recent: list[str] = ()):
         self.rule, self.info, self.llm = rule, info, llm
         self.catalog, self.bundle = catalog, bundle
+        self.format, self.recent = fmt, list(recent)
         self.repairs_left = MAX_REPAIRS
         self.log: list[dict] = []
 
@@ -135,7 +152,7 @@ class Attempt:
 
     def check_content(self, content: dict) -> dict:
         gate_schema(content)
-        gate_post(content)
+        gate_post(content, self.recent)
         gate_safety(content["bad_tf"], "bad_tf", self.rule)
         gate_safety(content["good_tf"], "good_tf", self.rule)
         write_bundle(self.bundle, self.rule, content)
@@ -149,6 +166,8 @@ class Attempt:
         provider = PROVIDERS[self.rule.cloud]
         content = self.ask("content", fill(
             prompt("content"),
+            # First, so the {{check_id}} inside the format text is filled too.
+            post_format=prompt(f"formats/{self.format}"),
             check_id=self.rule.id, check_name=self.info.check_name,
             resource_type=self.rule.resource, cloud=self.rule.cloud,
             source_url=self.info.source_url,
@@ -178,6 +197,7 @@ class Attempt:
             "check_name": self.info.check_name,
             "source_url": self.info.source_url,
             "guideline_url": self.guideline,
+            "format": self.format,
             "model": self.llm.model_used,
             "llm_calls": self.llm.calls,
             "repairs_used": MAX_REPAIRS - self.repairs_left,
@@ -230,7 +250,7 @@ def main() -> int:
             continue
         log.info("trying %s (%s, %s)", rule.id, rule.cloud, rule.resource)
         attempt = Attempt(rule, info, LLM(system, os.environ.get("LLM_FIXTURE_DIR")),
-                          catalog, bundle)
+                          catalog, bundle, post_format(state), recent_posts())
         try:
             meta = attempt.run()
         except LLMUnavailable as exc:
