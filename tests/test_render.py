@@ -22,6 +22,8 @@ def test_gate_shows_the_first_verified_diff_pair():
     assert story["gate"]["before"] == "block_public_acls = false"
     assert story["gate"]["after"] == "block_public_acls = true"
     assert story["target"]["icon"] == "bucket" and story["target"]["img"] is None
+    # Seen in the first real run: the gate must not borrow the target's icon.
+    assert story["gate"]["icon"] == "lock"
 
 
 def test_log_uses_documentation_ips_and_the_allowed_cidr():

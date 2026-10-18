@@ -136,7 +136,10 @@ def build_story(spec: dict, rule: dict) -> dict:
                    "icon": pick_icon({"type": "resource", "label": target["label"]},
                                      rule["resource"])},
         "gate": {**spec["gate"], "img": brand["gate"],
-                 "icon": infer_icon(f"{spec['gate']['label']} {rule['resource']}") or "lock",
+                 # From the gate's own label only: the resource type names
+                 # the target, so "Public access toggle" on a storage
+                 # account would otherwise get the target's bucket icon.
+                 "icon": infer_icon(spec["gate"]["label"]) or "lock",
                  "before": minus[0][2:], "after": plus[0][2:],
                  "width": max(len(minus[0]), len(plus[0])) - 2},
         "ally": ally and {**ally, "img": brand["ally"],
