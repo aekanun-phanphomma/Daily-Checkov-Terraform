@@ -15,7 +15,10 @@ def make_bundle(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def test_post_carries_tool_sourced_links_and_fits_linkedin(tmp_path):
+def test_post_carries_tool_sourced_links_and_fits_linkedin(tmp_path, monkeypatch):
+    # The link follows GITHUB_REF_NAME, which is "<n>/merge" when CI runs
+    # on a pull request; pin it to what the daily job sees.
+    monkeypatch.setenv("GITHUB_REF_NAME", "main")
     text = compose_post(make_bundle(tmp_path), "2026-10-17")
     assert "/tree/main/out/2026-10-17" in text
     assert "Check source: https://github.com/bridgecrewio/checkov/" in text
