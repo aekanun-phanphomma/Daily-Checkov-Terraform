@@ -11,6 +11,6 @@
       "type": "array", "minItems": 3, "maxItems": 3,
       "items": {"type": "string", "minLength": 20, "maxLength": 220}
     },
-    "post_en": {"type": "string", "minLength": 600, "maxLength": 1800}
+    "post_en": {"type": "string", "minLength": 350, "maxLength": 1800}
   }
 }

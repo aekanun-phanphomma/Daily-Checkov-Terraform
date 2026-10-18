@@ -58,6 +58,38 @@ TIMELINE = {
     "protected": 7.2,     # PROTECTED stamp
     "outro": 10.4,        # verdict pulse
 }
+# Scene kits: what the log and the stamps say, per kind of fix. A security
+# group DENYs a request; encryption does not stop the read, it makes the
+# bytes useless; logging stops nothing, it makes the call visible. Drawing
+# all three as "blocked at the gate" would teach the wrong thing, so a kit
+# with blocks=False keeps the traffic flowing after the fix, muted.
+#   hit: attacker's verdict before   stop: after   ally: allowed source after
+KITS = {
+    "network":   dict(log="FLOW LOG", hit="ALLOW", stop="DENY", ally="ALLOW",
+                      bad="EXPOSED", good="PROTECTED", blocks=True),
+    "exposure":  dict(log="ACCESS LOG", hit="200 OK", stop="403", ally="200 OK",
+                      bad="EXPOSED", good="PROTECTED", blocks=True),
+    "identity":  dict(log="API AUDIT", hit="ALLOWED", stop="DENIED", ally="ALLOWED",
+                      bad="OVER-PRIVILEGED", good="LEAST PRIVILEGE", blocks=True),
+    "secrets":   dict(log="WHO CAN READ IT", hit="PLAINTEXT", stop="REDACTED", ally="RESOLVED",
+                      bad="LEAKED", good="PROTECTED", blocks=True),
+    "metadata":  dict(log="IMDS CALLS", hit="200 CREDS", stop="401", ally="200 TOKEN",
+                      bad="EXPOSED", good="PROTECTED", blocks=True),
+    "crypto":    dict(log="RAW READS", hit="READABLE", stop="CIPHERTEXT", ally="DECRYPTED",
+                      bad="READABLE", good="ENCRYPTED", blocks=False),
+    "transport": dict(log="ON THE WIRE", hit="PLAINTEXT", stop="ENCRYPTED", ally="TLS",
+                      bad="SNIFFABLE", good="ENCRYPTED", blocks=False),
+    "audit":     dict(log="AUDIT TRAIL", hit="NOT LOGGED", stop="LOGGED", ally="LOGGED",
+                      bad="UNSEEN", good="RECORDED", blocks=False),
+}
+KIT_OF_TOPIC = {
+    "network-ingress": "network", "network-segmentation": "network", "hardening": "network",
+    "public-exposure": "exposure", "access-control": "exposure",
+    "data-protection": "exposure", "supply-chain": "exposure",
+    "iam-wildcard": "identity", "key-management": "identity",
+    "secrets": "secrets", "instance-metadata": "metadata",
+    "encryption-at-rest": "crypto", "transport-security": "transport", "logging": "audit",
+}
 # Documentation-only ranges (RFC 5737): never someone's real address.
 ATTACKER_IPS = ["203.0.113.24", "198.51.100.7", "203.0.113.87", "192.0.2.45", "198.51.100.140"]
 
@@ -126,11 +158,16 @@ def build_story(spec: dict, rule: dict) -> dict:
     after = ([(0, False), (None, True), (1, False), (2, False), (None, True)] if ally
              else [(i, False) for i in range(5)])
 
+    # Column as wide as the longest source: labels run up to 22 characters,
+    # and a fixed width glued "Stolen access key" to the action after it.
+    src_width = max(len(s) for s in [*sources, ally_src]) + 2
+
     def row(src: str) -> str:
-        return f"{src:<16}{spec['attack_label']:<30}→ {target['label']}"
+        return f"{src:<{src_width}}{spec['attack_label']:<30}→ {target['label']}"
 
     return {
         **spec,
+        "kit": KITS[KIT_OF_TOPIC.get(rule.get("topic", ""), "network")],
         "attacker": {**attacker, "icon": TYPE_ICON[attacker["type"]]},
         "target": {**target, "img": brand["target"],
                    "icon": pick_icon({"type": "resource", "label": target["label"]},

@@ -20,11 +20,16 @@ Task. Return JSON with exactly these keys:
 3. "why_it_matters": exactly 3 strings, each <= 200 characters: the attack
    path or failure mode in technical terms (who can reach what, through
    which API or protocol, and what the fix blocks).
-4. "post_en": a LinkedIn post, 600-1600 characters, plain text with line
-   breaks. Structure:
-     - hook line: a concrete risk, no clickbait, no question
-     - what {{check_id}} checks, in one or two sentences
-     - why it matters (condensed from why_it_matters)
-     - the fix in one sentence, naming the exact argument and value
-     - one closing question to readers about their own practice
-   Do not paste code. Do not include hashtags, URLs or emoji.
+4. "post_en": a LinkedIn post, plain text with line breaks, in TODAY'S
+   FORMAT below. The series rotates formats so consecutive posts do not
+   read alike; follow this one, not a generic tip structure.
+
+{{post_format}}
+
+   Rules for every format:
+     - The first line is concrete: a value, a port, an API or a consequence.
+       Do not open with "Leaving", "Exposing", "Publicly", "Unrestricted",
+       "Misconfigured", "Imagine", "Did you know" or "In today's".
+     - Never write the formula "Checkov check {{check_id}} evaluates/
+       inspects/flags ..."; say what it fails in plain words.
+     - Do not paste code. Do not include hashtags, URLs or emoji.

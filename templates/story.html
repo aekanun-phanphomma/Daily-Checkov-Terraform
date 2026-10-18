@@ -1,4 +1,7 @@
 <!doctype html>
+{#- Scene height (nodes and wires, without the callout): the ally needs
+    a second row under the main wire. -#}
+{% set H = 500 if s.ally else 250 %}
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -63,17 +66,22 @@
   .verdict.good { animation: in .4s var(--t-flip) both, pop .5s var(--t-outro) forwards; }
 
   /* ---- stage ----------------------------------------------------------- */
-  .stage { position: relative; height: {{ 560 if s.ally else 400 }}px; flex: none; border-radius: 24px;
+  /* The stage takes whatever height the card has left and the scene sits
+     centred in it, so a short card is a bigger stage, not a dead band. */
+  .stage { position: relative; flex: 1 0 {{ H + 110 }}px; border-radius: 24px;
            border: 1px solid var(--line); overflow: hidden; background: var(--panel);
            /* Flat tints only: big soft gradients band badly in H.264 yuv420p. */
            animation: to-hurt .6s var(--t-attack) both, to-calm .8s var(--t-safe) forwards; }
   @keyframes to-hurt { from { background: var(--panel); } to { background: var(--hurt); } }
   @keyframes to-calm { from { background: var(--hurt); } to { background: var(--calm); } }
-  .world { position: absolute; inset: 0; animation: shake .4s var(--t-exposed) both; }
+  /* Centred in the space above the callout (which takes ~90px at the foot). */
+  .world { position: absolute; left: 0; right: 0; top: calc(50% - 45px); height: {{ H }}px;
+           margin-top: -{{ H // 2 }}px;
+           animation: shake .4s var(--t-exposed) both; }
   @keyframes shake { 20% { transform: translate(-8px, 3px); } 40% { transform: translate(7px, -4px); }
                      60% { transform: translate(-5px, 2px); } 80% { transform: translate(3px, -1px); } }
 
-  svg.wires { position: absolute; inset: 0; width: 1072px; height: 560px; overflow: visible; }
+  svg.wires { position: absolute; inset: 0; width: 1072px; height: {{ H }}px; overflow: visible; }
   .wire { fill: none; stroke: #475569; stroke-width: 4; stroke-dasharray: 1; stroke-dashoffset: 1;
           animation: draw .7s .2s cubic-bezier(.6,0,.2,1) both; }
   .wire.flow { stroke: #94a3b8; stroke-dasharray: 10 14; stroke-dashoffset: 0; opacity: .5;
@@ -110,9 +118,11 @@
 
   .stamp { position: absolute; top: 26px; font-size: 26px; font-weight: 900; letter-spacing: .14em;
            color: #fff; padding: 6px 16px; border-radius: 8px; transform: rotate(-6deg); }
-  .stamp.bad { left: 840px; background: var(--bad);
+  /* Anchored right: kit stamps run from "UNSEEN" to "LEAST PRIVILEGE". */
+  .stamp { right: 24px; white-space: nowrap; }
+  .stamp.bad { background: var(--bad);
                animation: slam .35s var(--t-exposed) both, out .3s var(--t-fix) forwards; }
-  .stamp.good { left: 820px; background: var(--good); animation: slam .35s var(--t-protected) both; }
+  .stamp.good { background: var(--good); animation: slam .35s var(--t-protected) both; }
   @keyframes slam { from { opacity: 0; transform: rotate(-6deg) scale(2.6); }
                     to { opacity: 1; transform: rotate(-6deg) scale(1); } }
 
@@ -161,6 +171,7 @@
   @keyframes stopped { 0% { offset-distance: 0%; opacity: 0; transform: scale(1); } 8% { opacity: 1; }
                        65% { offset-distance: 51%; opacity: 1; transform: scale(1); background: var(--packet); }
                        85%, 100% { offset-distance: 51%; opacity: 0; transform: scale(2.6); background: var(--bad); } }
+  .pk.muted { background: #64748b; box-shadow: none; }
   .pk.allowed { background: var(--ally); box-shadow: 0 0 14px var(--ally); animation: through 1.4s linear both; }
 
   .callout { position: absolute; left: 36px; right: 36px; bottom: 30px; font-size: 25px; line-height: 1.3; }
@@ -191,15 +202,15 @@
               color: var(--muted); font-weight: 700; font-family: "Liberation Sans", Arial, sans-serif; }
   .log .row { position: absolute; left: 24px; right: 24px; display: flex; justify-content: space-between;
               white-space: pre; color: #cbd5e1; }
-  .log .row b.ALLOW { color: var(--bad); }
-  .log .row b.DENY { color: var(--good); }
-  .log .row b.OK { color: var(--ally); }
+  .log .row b.hit { color: var(--bad); }
+  .log .row b.stop { color: var(--good); }
+  .log .row b.ally { color: var(--ally); }
   .log .first { position: absolute; inset: 0; animation: out .3s var(--t-fix) forwards; }
   @keyframes line { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: none; } }
 
   /* Stage, code and log sit centred in whatever height the title and
      footer leave, so a short card has no dead band above the footer. */
-  .middle { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+  .middle { flex: 1; display: flex; flex-direction: column; gap: 22px; }
   .footer { display: flex; flex-direction: column; gap: 5px; font-size: 21px; color: var(--muted);
             white-space: nowrap; border-top: 1px solid var(--line); padding-top: 16px; margin-top: auto; }
   .footer strong { color: var(--ink); }
@@ -255,7 +266,7 @@
   <main class="middle">
   <section class="stage">
     <div class="world">
-      <svg class="wires" viewBox="0 0 1072 560">
+      <svg class="wires" viewBox="0 0 1072 {{ H }}">
         <path class="wire" d="{{ MAIN }}" pathLength="1"/>
         <path class="wire flow" d="{{ MAIN }}"/>
         {% if s.ally %}<path class="wire ally" d="{{ ALLY }}" pathLength="1"/>{% endif %}
@@ -267,7 +278,13 @@
       <div class="pk through" style="offset-path: path('M 266 {{ y }} L 806 {{ y }}'); animation-delay: {{ t.attack - 0.1 + i * 0.27 }}s"></div>
       {% endfor %}
       {% for i in range(9) %}
+      {% if s.kit.blocks %}
       <div class="pk stopped" style="offset-path: path('{{ MAIN }}'); animation-delay: {{ t.safe + i * 0.42 }}s"></div>
+      {% else %}
+      {# Encryption and logging stop nothing: the traffic still arrives,
+         just harmless (ciphertext) or seen (logged). #}
+      <div class="pk through muted" style="offset-path: path('{{ MAIN }}'); animation-delay: {{ t.safe + i * 0.42 }}s"></div>
+      {% endif %}
       {% endfor %}
       {% if s.ally %}
       {% for i in range(6) %}
@@ -283,8 +300,8 @@
         {{ glyph(s.target) }}
         <div class="type">TARGET</div><div class="label" data-fit>{{ s.target.label }}</div>
       </div>
-      <div class="stamp bad">EXPOSED</div>
-      <div class="stamp good">PROTECTED</div>
+      <div class="stamp bad">{{ s.kit.bad }}</div>
+      <div class="stamp good">{{ s.kit.good }}</div>
       {% if s.ally %}
       <div class="node ally">
         {{ glyph(s.ally) }}
@@ -307,9 +324,10 @@
         <div class="rule mono"><span class="open" data-fit>{{ s.gate.before }}</span><span class="closed" data-fit>{{ s.gate.after }}</span></div>
       </div>
 
-      <div class="callout bad">{{ s.risk_callout }}</div>
-      <div class="callout good">{{ s.control_callout }}</div>
     </div>
+    {# Outside the centred scene: always at the foot of the stage. #}
+    <div class="callout bad">{{ s.risk_callout }}</div>
+    <div class="callout good">{{ s.control_callout }}</div>
   </section>
 
   <div class="code mono">
@@ -325,14 +343,14 @@
 
   {% if s.log_before %}
   <div class="log mono">
-    <div class="bar">REQUEST LOG &middot; {{ s.attack_label }}</div>
+    <div class="bar">{{ s.kit.log }} &middot; {{ s.attack_label }}</div>
     <div class="first">
     {% for r in s.log_before %}
-      <div class="row" style="top: {{ 44 + loop.index0 * 29 }}px; animation: line .3s {{ t.attack + 0.3 + loop.index0 * 0.5 }}s both">{{ r.text }}<b class="ALLOW">ALLOW</b></div>
+      <div class="row" style="top: {{ 44 + loop.index0 * 29 }}px; animation: line .3s {{ t.attack + 0.3 + loop.index0 * 0.5 }}s both">{{ r.text }}<b class="hit">{{ s.kit.hit }}</b></div>
     {% endfor %}
     </div>
     {% for r in s.log_after %}
-      <div class="row" style="top: {{ 44 + loop.index0 * 29 }}px; animation: line .3s {{ t.safe + 0.2 + loop.index0 * 0.55 }}s both">{{ r.text }}<b class="{{ 'OK' if r.allowed else 'DENY' }}">{{ 'ALLOW' if r.allowed else 'DENY' }}</b></div>
+      <div class="row" style="top: {{ 44 + loop.index0 * 29 }}px; animation: line .3s {{ t.safe + 0.2 + loop.index0 * 0.55 }}s both">{{ r.text }}<b class="{{ 'ally' if r.allowed else 'stop' }}">{{ s.kit.ally if r.allowed else s.kit.stop }}</b></div>
     {% endfor %}
   </div>
   {% endif %}

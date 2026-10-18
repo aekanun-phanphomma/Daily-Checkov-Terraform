@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from common import Rule
-from gates import (GateFailure, gate_diagram, gate_post, gate_safety, gate_schema,
+from gates import (GateFailure, gate_diagram, gate_fresh, gate_post, gate_safety, gate_schema,
                    normalize_code_line)
 
 FIXTURE = Path(__file__).parent / "fixtures" / "s3"
@@ -114,3 +114,32 @@ def test_extra_keys_and_aligned_diff_lines_are_tidied_not_failed():
 def test_normalize_ignores_alignment_and_comments():
     assert normalize_code_line("  block_public_acls       = true # FIX: x") == \
         "block_public_acls = true"
+
+
+# G6b: the seams that made the first posts read alike.
+RECENT = [
+    "Leaving SSH exposed to the public internet creates a vector.\n\nBody.\n\n"
+    "How do you currently verify management ports are private?",
+]
+
+
+@pytest.mark.parametrize("post, expected", [
+    ("Exposing port 22 invites attacks.\n\nBody text here.", "stock word"),
+    ("Port 22 was open.\n\nCheckov check CKV_AWS_24 evaluates security groups.", "formula"),
+    ("Leaving nothing to chance.\n\nBody.", "stock word"),
+    ("Port 22 was open.\n\nBody.\n\nHow do you currently audit this?", "closing"),
+])
+def test_post_must_not_reuse_recent_seams(post, expected):
+    assert expected in fails(gate_fresh, post, RECENT)
+
+
+def test_first_word_must_differ_from_recent_openings():
+    recent = ["Port 22 sat open on a test VM.\n\nBody.\n\nWould CI catch it?"]
+    assert "first word" in fails(gate_fresh, "Port 3389 too.\n\nBody.\n\nThoughts?", recent)
+    gate_fresh("One wildcard did it.\n\nBody.\n\nThoughts?", recent)
+
+
+def test_fresh_post_passes_with_and_without_history():
+    post = "One wildcard in source_address_prefix.\n\nStep 1: a scan.\n\nWould your pipeline stop it?"
+    gate_fresh(post, RECENT)
+    gate_fresh(post, [])
