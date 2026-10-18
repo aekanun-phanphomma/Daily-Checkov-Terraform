@@ -4,6 +4,8 @@ Format: INSIDE THE CHECK (700-1500 characters).
 - Then explain what {{check_id}}'s source code reads: the attribute(s) it
   inspects and which values pass and which fail. Take this ONLY from
   check_source_code; if the code does not make it clear, write UNKNOWN.
+  Say it in Terraform terms (arguments and values); never name Checkov's
+  internal classes or functions, which mean nothing to the reader.
 - Point out one passing or failing value that surprises people, if the
   code shows one (for example an omitted argument that fails because the
   default is unsafe).
