@@ -13,7 +13,7 @@ to the next rule instead of burning a repair on it.
   G5  good passes   checkov on good/: <ID> passed, and no P1 check for the
                     same resource type failed; guideline URL present
   G6  post text     English, plain, no URLs/hashtags/emoji, length bounds
-  G7  diagram       schema, ids consistent, code_diff copied from the code
+  G7  diagram       schema, distinct role labels, code_diff copied from the code
   G8  render        the spec fits the 1200x1500 card (in render.py)
 """
 
@@ -347,27 +347,22 @@ def gate_diagram(spec: dict, bad_tf: str, good_tf: str) -> None:
         if isinstance(line, str) and line[:1] in "-+" and line[1:].strip() else line
         for line in spec.get("code_diff", [])
     ]
-    # An unknown icon only costs the picture its hint (render.py infers one),
-    # so it is dropped rather than repaired.
-    allowed = _schema("diagram.schema.json")["$defs"]["node"]["properties"]["icon"]["enum"]
-    for panel in ("before", "after"):
-        for node in spec.get(panel, {}).get("nodes", []):
-            if isinstance(node, dict) and "icon" in node and node["icon"] not in allowed:
-                del node["icon"]
     check_schema(spec, "diagram.schema.json", gate)
     _plain_english(json.dumps(spec, ensure_ascii=False), "diagram_spec", gate)
 
-    for panel in ("before", "after"):
-        ids = [n["id"] for n in spec[panel]["nodes"]]
-        if len(ids) != len(set(ids)):
-            raise GateFailure(gate, f"{panel}: node ids are not unique: {ids}")
-        for edge in spec[panel]["edges"]:
-            for end in ("from", "to"):
-                if edge[end] not in ids:
-                    raise GateFailure(gate, f"{panel}: edge {end}={edge[end]!r} "
-                                      f"is not a node id {ids}")
-    if not any(e.get("blocked") for e in spec["after"]["edges"]):
-        raise GateFailure(gate, "after: at least one edge must set blocked: true")
+    # The schema already forces the shape attacker -> gate -> target, so the
+    # old failure ("NSG rule" drawn as both source and target) cannot be
+    # expressed. What is left is four roles sharing a name, which reads the
+    # same way: the picture would show one thing guarding itself.
+    roles = {role: spec[role]["label"] for role in ("attacker", "gate", "target", "ally")
+             if role in spec}
+    seen: dict[str, str] = {}
+    for role, label in roles.items():
+        key = " ".join(label.lower().split())
+        if key in seen:
+            raise GateFailure(gate, f"{seen[key]} and {role} have the same label "
+                              f"{label!r}; each role is a different thing")
+        seen[key] = role
 
     code = {"-": {normalize_code_line(l) for l in bad_tf.splitlines()},
             "+": {normalize_code_line(l) for l in good_tf.splitlines()}}

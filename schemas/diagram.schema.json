@@ -1,55 +1,45 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "LLM diagram spec",
+  "title": "LLM diagram spec: one attack path, one control, one fix",
   "type": "object",
   "additionalProperties": false,
-  "required": ["title", "before", "after", "code_diff"],
+  "required": ["title", "attacker", "gate", "target", "attack_label",
+               "risk_callout", "control_callout", "code_diff"],
   "$defs": {
-    "node": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "type", "label"],
-      "properties": {
-        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,20}$"},
-        "type": {"enum": ["internet", "user", "service", "resource", "control"]},
-        "label": {"type": "string", "minLength": 1, "maxLength": 24},
-        "icon": {"enum": ["globe", "user", "server", "bucket", "database", "shield", "firewall", "key", "function", "container", "cluster", "identity", "queue", "lock", "app", "network"]}
-      }
-    },
-    "edge": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["from", "to", "label"],
-      "properties": {
-        "from": {"type": "string"},
-        "to": {"type": "string"},
-        "label": {"type": "string", "minLength": 1, "maxLength": 28},
-        "blocked": {"type": "boolean"}
-      }
-    }
+    "label": {"type": "string", "minLength": 1, "maxLength": 22}
   },
   "properties": {
     "title": {"type": "string", "minLength": 5, "maxLength": 60},
-    "before": {
+    "attacker": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["nodes", "edges", "risk_callout"],
+      "required": ["type", "label"],
       "properties": {
-        "nodes": {"type": "array", "minItems": 2, "maxItems": 4, "items": {"$ref": "#/$defs/node"}},
-        "edges": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"$ref": "#/$defs/edge"}},
-        "risk_callout": {"type": "string", "minLength": 5, "maxLength": 90}
+        "type": {"enum": ["internet", "user"]},
+        "label": {"$ref": "#/$defs/label"}
       }
     },
-    "after": {
+    "gate": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["nodes", "edges", "control_callout"],
-      "properties": {
-        "nodes": {"type": "array", "minItems": 2, "maxItems": 4, "items": {"$ref": "#/$defs/node"}},
-        "edges": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"$ref": "#/$defs/edge"}},
-        "control_callout": {"type": "string", "minLength": 5, "maxLength": 90}
-      }
+      "required": ["label"],
+      "properties": {"label": {"$ref": "#/$defs/label"}}
     },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label"],
+      "properties": {"label": {"$ref": "#/$defs/label"}}
+    },
+    "ally": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label"],
+      "properties": {"label": {"$ref": "#/$defs/label"}}
+    },
+    "attack_label": {"type": "string", "minLength": 1, "maxLength": 28},
+    "risk_callout": {"type": "string", "minLength": 5, "maxLength": 90},
+    "control_callout": {"type": "string", "minLength": 5, "maxLength": 90},
     "code_diff": {
       "type": "array", "minItems": 2, "maxItems": 6,
       "items": {"type": "string", "pattern": "^[-+] [^ ]", "maxLength": 80}

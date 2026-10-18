@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Fixed 1200x1500 canvas (4:5, LinkedIn's tallest feed ratio), one stage,
+     one story. The storyboard times come from render.py's TIMELINE as CSS
+     variables, so every delay below is a name, not a number:
+
+       hook     frame 0 already shows the bad line: it is the thumbnail
+       attack   traffic floods through the open gate, the target is EXPOSED
+       fix      bad line struck out, good line types in, Checkov flips
+       safe     same stage: the gate closes, the attack bursts on it, the
+                allowed source still gets through, the target is PROTECTED
+       outro    the verdict pulses once
+
+     Before and after share one stage on purpose: the viewer sees the change
+     happen in place instead of comparing two panels.
+
+     No web fonts and no icon fonts: the runner renders with whatever
+     Playwright's --with-deps installed. render.py does not "play" the page:
+     it pauses every animation and seeks it to frame N's timestamp before
+     each screenshot, so the same spec always produces the same video. */
+  :root {
+    --bg: #0b1120; --panel: #111a2e; --ink: #e2e8f0; --muted: #94a3b8; --line: #2a3a55;
+    --bad: #f43f5e; --good: #22c55e; --packet: #fbbf24; --ally: #60a5fa; --code: #0a1020;
+    --hurt: #1b1222; --calm: #0e1d1c;
+    {% for name, at in t.items() %}--t-{{ name }}: {{ at }}s; {% endfor %}
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1200px; height: 1500px; overflow: hidden; background: var(--bg); color: var(--ink);
+         font-family: "Liberation Sans", "DejaVu Sans", Arial, Helvetica, sans-serif;
+         padding: 54px 64px 48px; display: flex; flex-direction: column; gap: 22px; }
+  .mono { font-family: "DejaVu Sans Mono", "Liberation Mono", Consolas, monospace; }
+
+  .eyebrow { font-size: 22px; letter-spacing: .14em; color: var(--muted); font-weight: 700; }
+  .eyebrow .cloud { color: var(--ink); background: #1e293b; border: 1px solid var(--line);
+                    padding: 3px 10px; border-radius: 8px; margin: 0 4px; }
+  h1 { font-size: 50px; line-height: 1.1; font-weight: 800; margin-top: 12px; }
+
+  /* Two animations on one property: the first fills both ways, the second
+     only forwards, so before its own delay the first one governs. */
+  @keyframes in   { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+  @keyframes out  { from { opacity: 1; } to { opacity: 0; transform: translateY(14px); } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop  { 50% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(34,197,94,.25); } }
+
+  /* ---- status row ------------------------------------------------------ */
+  .status { position: relative; height: 54px; flex: none; }
+  .pill, .verdict { position: absolute; top: 0; height: 54px; display: flex; align-items: center;
+                    gap: 12px; border-radius: 14px; padding: 0 20px; font-weight: 800; }
+  .pill { left: 0; font-size: 22px; letter-spacing: .1em; color: #fff; }
+  .pill .n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+             background: rgba(255,255,255,.22); font-size: 18px; letter-spacing: 0; }
+  .pill.bad { background: var(--bad); animation: out .3s var(--t-flip) both; }
+  .pill.good { background: #15803d; animation: in .4s var(--t-flip) both; }
+  .verdict { right: 0; font-size: 20px; background: #0d1628; border: 2px solid var(--line); }
+  .verdict .cmd { color: var(--muted); font-weight: 400; }
+  .verdict b { padding: 4px 10px; border-radius: 8px; color: #fff; letter-spacing: .08em; }
+  .verdict.bad b { background: var(--bad); }
+  .verdict.bad { animation: out .3s var(--t-flip) both; }
+  .verdict.good b { background: var(--good); }
+  .verdict.good { animation: in .4s var(--t-flip) both, pop .5s var(--t-outro) forwards; }
+
+  /* ---- stage ----------------------------------------------------------- */
+  .stage { position: relative; height: {{ 560 if s.ally else 400 }}px; flex: none; border-radius: 24px;
+           border: 1px solid var(--line); overflow: hidden; background: var(--panel);
+           /* Flat tints only: big soft gradients band badly in H.264 yuv420p. */
+           animation: to-hurt .6s var(--t-attack) both, to-calm .8s var(--t-safe) forwards; }
+  @keyframes to-hurt { from { background: var(--panel); } to { background: var(--hurt); } }
+  @keyframes to-calm { from { background: var(--hurt); } to { background: var(--calm); } }
+  .world { position: absolute; inset: 0; animation: shake .4s var(--t-exposed) both; }
+  @keyframes shake { 20% { transform: translate(-8px, 3px); } 40% { transform: translate(7px, -4px); }
+                     60% { transform: translate(-5px, 2px); } 80% { transform: translate(3px, -1px); } }
+
+  svg.wires { position: absolute; inset: 0; width: 1072px; height: 560px; overflow: visible; }
+  .wire { fill: none; stroke: #475569; stroke-width: 4; stroke-dasharray: 1; stroke-dashoffset: 1;
+          animation: draw .7s .2s cubic-bezier(.6,0,.2,1) both; }
+  .wire.flow { stroke: #94a3b8; stroke-dasharray: 10 14; stroke-dashoffset: 0; opacity: .5;
+               animation: dash .8s linear infinite; animation-delay: var(--t-attack); }
+  .wire.ally { stroke: #2f5180; animation: draw .8s var(--t-safe) cubic-bezier(.6,0,.2,1) both; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes dash { to { stroke-dashoffset: -24; } }
+  /* Between the attacker (ends x=266) and the gate (starts x=552). */
+  .edge-label { position: absolute; left: 270px; width: 278px; top: 162px; text-align: center; overflow: hidden;
+                white-space: nowrap; }
+
+  .node { position: absolute; top: 70px; width: 236px; height: 150px; border-radius: 20px;
+          background: #0d1628; border: 3px solid var(--bc, var(--line)); display: flex;
+          flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; }
+  .node .icon { width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center;
+                background: var(--cbg); color: var(--c); flex: none; }
+  .node .icon svg { width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 1.8;
+                    stroke-linecap: round; stroke-linejoin: round; }
+  /* Vendor icons: as shipped, never tinted, cropped or rotated. */
+  .node .icon.brand { width: 76px; height: 76px; border-radius: 0; background: none; }
+  .node .icon.brand img { width: 72px; height: 72px; display: block; }
+  .node .type { font-size: 14px; letter-spacing: .14em; color: var(--muted); font-weight: 700; }
+  .node .label { font-size: 21px; font-weight: 700; white-space: nowrap; max-width: 100%; overflow: hidden; }
+  .node.internet { --c: #f59e0b; --cbg: rgba(245,158,11,.16); --bc: #7a5a1c; left: 30px; }
+  .node.user     { --c: var(--ally); --cbg: rgba(96,165,250,.16); --bc: #2f5180; left: 30px; }
+  .node.ally     { --c: var(--ally); --cbg: rgba(96,165,250,.16); --bc: #2f5180; left: 30px; top: 330px;
+                   animation: in .5s var(--t-safe) both; }
+  .node.target   { --c: #38bdf8; --cbg: rgba(56,189,248,.16); left: 806px; border-color: #22607e;
+                   animation: to-red .3s var(--t-exposed) both, to-green .4s var(--t-protected) forwards,
+                              hit .8s var(--t-attack) 4 ease-out; }
+  @keyframes to-red   { to { border-color: var(--bad); } }
+  @keyframes to-green { from { border-color: var(--bad); } to { border-color: var(--good); } }
+  @keyframes hit { 0% { box-shadow: 0 0 0 0 rgba(244,63,94,.6); } 100% { box-shadow: 0 0 0 28px rgba(244,63,94,0); } }
+
+  .stamp { position: absolute; top: 26px; font-size: 26px; font-weight: 900; letter-spacing: .14em;
+           color: #fff; padding: 6px 16px; border-radius: 8px; transform: rotate(-6deg); }
+  .stamp.bad { left: 840px; background: var(--bad);
+               animation: slam .35s var(--t-exposed) both, out .3s var(--t-fix) forwards; }
+  .stamp.good { left: 820px; background: var(--good); animation: slam .35s var(--t-protected) both; }
+  @keyframes slam { from { opacity: 0; transform: rotate(-6deg) scale(2.6); }
+                    to { opacity: 1; transform: rotate(-6deg) scale(1); } }
+
+  /* The gate is the control itself, sitting ON the path, not a node. */
+  .gate { position: absolute; left: 600px; top: 145px; width: 96px; height: 96px; margin: -48px 0 0 -48px; }
+  .gate .ring { position: absolute; inset: 0; border-radius: 50%; background: #0d1628;
+                border: 3px dashed #64748b; display: grid; place-items: center; color: #94a3b8; }
+  .gate svg { width: 46px; height: 46px; fill: none; stroke: currentColor; stroke-width: 1.8;
+              stroke-linecap: round; stroke-linejoin: round; }
+  .gate .ring.brand { border-style: solid; border-color: #475569; background: #e2e8f0; }
+  .gate .ring.brand img { width: 58px; height: 58px; display: block; }
+  .gate .shut { position: absolute; inset: -6px; border-radius: 50%; background: #052e1a;
+                border: 4px solid var(--good); display: grid; place-items: center; color: var(--good);
+                animation: drop .45s var(--t-shield) cubic-bezier(.3,1.6,.5,1) both; }
+  /* With a vendor icon the fix is a ring and a badge AROUND it: the icon
+     itself stays visible and unmodified. */
+  .gate .shut.brand { background: none; inset: -8px; border-width: 5px; }
+  .gate .badge { position: absolute; right: -10px; bottom: -10px; width: 40px; height: 40px;
+                 border-radius: 50%; background: var(--good); color: #fff; display: grid; place-items: center; }
+  .gate .badge svg { width: 24px; height: 24px; stroke-width: 3; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-160px) scale(1.4); } to { opacity: 1; transform: none; } }
+  .gate .wave { position: absolute; inset: -6px; border-radius: 50%; border: 4px solid var(--good); opacity: 0;
+                animation: wave .7s var(--t-safe) ease-out forwards; }
+  @keyframes wave { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(2.8); } }
+  .gate .bounce { position: absolute; inset: -6px; border-radius: 50%;
+                  animation: guard 1.2s var(--t-safe) ease-out 3; }
+  @keyframes guard { 0%, 40% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+                     55% { box-shadow: 0 0 0 12px rgba(34,197,94,.45); }
+                     100% { box-shadow: 0 0 0 24px rgba(34,197,94,0); } }
+  .gate-cap { position: absolute; left: 600px; top: 12px; transform: translateX(-50%);
+              text-align: center; white-space: nowrap; }
+  .gate-cap .name { font-size: 15px; letter-spacing: .14em; color: var(--muted); font-weight: 700; }
+  .gate-cap .rule { font-size: {{ 22 if s.gate.width <= 38 else 17 }}px; margin-top: 4px; position: relative; height: 30px; }
+  .gate-cap .rule span { position: absolute; left: 50%; transform: translateX(-50%); }
+  .gate-cap .open { color: var(--bad); animation: out .3s var(--t-flip) both; }
+  .gate-cap .closed { color: var(--good); opacity: 0; animation: fade .4s var(--t-shield) forwards; }
+
+  /* Packets ride the same SVG paths through offset-path, so they can never
+     drift off the wire. */
+  .pk { position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%;
+        offset-rotate: 0deg; background: var(--packet); box-shadow: 0 0 14px var(--packet); }
+  .pk.through { animation: through 1s linear both; }
+  @keyframes through { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; }
+                       92% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+  .pk.stopped { animation: stopped 1.2s linear both; }
+  @keyframes stopped { 0% { offset-distance: 0%; opacity: 0; transform: scale(1); } 8% { opacity: 1; }
+                       65% { offset-distance: 51%; opacity: 1; transform: scale(1); background: var(--packet); }
+                       85%, 100% { offset-distance: 51%; opacity: 0; transform: scale(2.6); background: var(--bad); } }
+  .pk.allowed { background: var(--ally); box-shadow: 0 0 14px var(--ally); animation: through 1.4s linear both; }
+
+  .callout { position: absolute; left: 36px; right: 36px; bottom: 30px; font-size: 25px; line-height: 1.3; }
+  .callout.bad { animation: fade .5s var(--t-attack) both, out .3s var(--t-fix) forwards; }
+  .callout.good { opacity: 0; animation: fade .5s var(--t-protected) forwards; }
+
+  /* ---- code ------------------------------------------------------------ */
+  .code { background: var(--code); border: 1px solid var(--line); border-radius: 18px; flex: none;
+          padding: 16px 28px 18px; font-size: {{ 28 if s.code_width <= 54 else 21 }}px; line-height: 1.6; }
+  .code .bar { font-size: 15px; letter-spacing: .14em; color: var(--muted); font-weight: 700;
+               font-family: "Liberation Sans", Arial, sans-serif; margin-bottom: 4px; }
+  .code .ln { white-space: pre; position: relative; }
+  .minus { color: var(--bad); animation: dim .4s var(--t-fix) both; }
+  @keyframes dim { to { opacity: .45; } }
+  .minus .strike { position: absolute; left: 0; top: 50%; height: 3px; background: var(--bad);
+                   width: 0; animation: strike .4s var(--t-fix) ease-in both; }
+  @keyframes strike { to { width: var(--w); } }
+  .plus { color: var(--good); }
+  .plus .typed { display: inline-block; overflow: hidden; vertical-align: top; width: 0;
+                 border-right: 3px solid var(--good); }
+  @keyframes type { to { width: var(--n); } }
+  @keyframes blink { 50% { border-color: transparent; } }
+
+  /* ---- request log ----------------------------------------------------- */
+  .log { position: relative; height: {{ 46 + 29 * s.log_before|length }}px; flex: none; background: #070c18;
+         border: 1px solid var(--line); border-radius: 18px; font-size: 19px; overflow: hidden; }
+  .log .bar { position: absolute; left: 24px; top: 14px; font-size: 15px; letter-spacing: .14em;
+              color: var(--muted); font-weight: 700; font-family: "Liberation Sans", Arial, sans-serif; }
+  .log .row { position: absolute; left: 24px; right: 24px; display: flex; justify-content: space-between;
+              white-space: pre; color: #cbd5e1; }
+  .log .row b.ALLOW { color: var(--bad); }
+  .log .row b.DENY { color: var(--good); }
+  .log .row b.OK { color: var(--ally); }
+  .log .first { position: absolute; inset: 0; animation: out .3s var(--t-fix) forwards; }
+  @keyframes line { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: none; } }
+
+  /* Stage, code and log sit centred in whatever height the title and
+     footer leave, so a short card has no dead band above the footer. */
+  .middle { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+  .footer { display: flex; flex-direction: column; gap: 5px; font-size: 21px; color: var(--muted);
+            white-space: nowrap; border-top: 1px solid var(--line); padding-top: 16px; margin-top: auto; }
+  .footer strong { color: var(--ink); }
+  .verified { color: var(--good); font-weight: 700; }
+</style>
+</head>
+<body>
+  {# Neutral line icons, 24x24, stroke-only: used wherever no vendor icon is
+     mapped (always for the attacker, which is no vendor's product). #}
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></symbol>
+      <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol>
+      <symbol id="i-bucket" viewBox="0 0 24 24"><path d="M4 6h16l-2 14H6L4 6z"/><ellipse cx="12" cy="6" rx="8" ry="2.5"/></symbol>
+      <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.4 8.5-8 9-4.6-.5-8-4-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+      <symbol id="i-firewall" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.3h18M3 14.6h18M9 4v5.3M15 9.3v5.3M9 14.6V20"/></symbol>
+      <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></symbol>
+      <symbol id="i-function" viewBox="0 0 24 24"><path d="M8 20c2 0 3-1.5 3.5-4l1.5-8c.5-2.5 1.5-4 3.5-4"/><path d="M8 11h7"/></symbol>
+      <symbol id="i-container" viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7l9-5z"/><path d="M3 7l9 5 9-5M12 12v10"/></symbol>
+      <symbol id="i-cluster" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/><path d="M12 3v6M12 15v6M3.8 7.5l5.2 3M15 13.5l5.2 3M3.8 16.5l5.2-3M15 10.5l5.2-3"/></symbol>
+      <symbol id="i-identity" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.6-1.6 2-2.5 3.5-2.5s2.9.9 3.5 2.5M15 10h3M15 13h3"/></symbol>
+      <symbol id="i-queue" viewBox="0 0 24 24"><rect x="3" y="6" width="5" height="12" rx="1"/><rect x="9.5" y="6" width="5" height="12" rx="1"/><rect x="16" y="6" width="5" height="12" rx="1"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+      <symbol id="i-app" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/></symbol>
+      <symbol id="i-network" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v5M12 12l-6 5.5M12 12l6 5.5"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    </defs>
+  </svg>
+
+  {% macro glyph(n) -%}
+  {% if n.img %}<div class="icon brand"><img src="{{ n.img }}" alt=""></div>
+  {%- else %}<div class="icon"><svg><use href="#i-{{ n.icon }}"/></svg></div>{% endif %}
+  {%- endmacro %}
+
+  <div>
+    <div class="eyebrow">CHECKOV DAILY <span class="cloud">{{ cloud|upper }}</span> {{ check_id }}</div>
+    <h1>{{ s.title }}</h1>
+  </div>
+
+  <div class="status">
+    <div class="pill bad"><span class="n">1</span>MISCONFIGURED</div>
+    <div class="pill good"><span class="n">2</span>FIXED</div>
+    <div class="verdict bad mono"><span class="cmd">checkov --check {{ check_id }}</span><b>FAILED</b></div>
+    <div class="verdict good mono"><span class="cmd">checkov --check {{ check_id }}</span><b>PASSED</b></div>
+  </div>
+
+  {% set MAIN = "M 266 145 L 806 145" %}
+  {# The allowed source joins the main wire AT the gate: it is the same
+     control letting it through, which is the point of the fix. #}
+  {% set ALLY = "M 266 405 C 600 405 600 300 600 193 L 600 145 L 806 145" %}
+  <main class="middle">
+  <section class="stage">
+    <div class="world">
+      <svg class="wires" viewBox="0 0 1072 560">
+        <path class="wire" d="{{ MAIN }}" pathLength="1"/>
+        <path class="wire flow" d="{{ MAIN }}"/>
+        {% if s.ally %}<path class="wire ally" d="{{ ALLY }}" pathLength="1"/>{% endif %}
+      </svg>
+      <div class="edge-label mono" data-fit style="font-size: {{ 21 if s.attack_label|length <= 21 else 16 }}px">{{ s.attack_label }}</div>
+
+      {% for i in range(13) %}
+      {% set y = 139 + (i % 3) * 6 %}
+      <div class="pk through" style="offset-path: path('M 266 {{ y }} L 806 {{ y }}'); animation-delay: {{ t.attack - 0.1 + i * 0.27 }}s"></div>
+      {% endfor %}
+      {% for i in range(9) %}
+      <div class="pk stopped" style="offset-path: path('{{ MAIN }}'); animation-delay: {{ t.safe + i * 0.42 }}s"></div>
+      {% endfor %}
+      {% if s.ally %}
+      {% for i in range(6) %}
+      <div class="pk allowed" style="offset-path: path('{{ ALLY }}'); animation-delay: {{ t.safe + 0.6 + i * 0.6 }}s"></div>
+      {% endfor %}
+      {% endif %}
+
+      <div class="node {{ s.attacker.type }}">
+        {{ glyph(s.attacker) }}
+        <div class="type">{{ s.attacker.type|upper }}</div><div class="label" data-fit>{{ s.attacker.label }}</div>
+      </div>
+      <div class="node target">
+        {{ glyph(s.target) }}
+        <div class="type">TARGET</div><div class="label" data-fit>{{ s.target.label }}</div>
+      </div>
+      <div class="stamp bad">EXPOSED</div>
+      <div class="stamp good">PROTECTED</div>
+      {% if s.ally %}
+      <div class="node ally">
+        {{ glyph(s.ally) }}
+        <div class="type">STILL ALLOWED</div><div class="label" data-fit>{{ s.ally.label }}</div>
+      </div>
+      {% endif %}
+
+      <div class="gate">
+        {% if s.gate.img %}
+        <div class="ring brand"><img src="{{ s.gate.img }}" alt=""></div>
+        <div class="shut brand"><span class="badge"><svg><use href="#i-check"/></svg></span></div>
+        {% else %}
+        <div class="ring"><svg><use href="#i-{{ s.gate.icon }}"/></svg></div>
+        <div class="shut"><svg><use href="#i-shield"/></svg></div>
+        {% endif %}
+        <div class="wave"></div><div class="bounce"></div>
+      </div>
+      <div class="gate-cap">
+        <div class="name">{{ s.gate.label|upper }}</div>
+        <div class="rule mono"><span class="open" data-fit>{{ s.gate.before }}</span><span class="closed" data-fit>{{ s.gate.after }}</span></div>
+      </div>
+
+      <div class="callout bad">{{ s.risk_callout }}</div>
+      <div class="callout good">{{ s.control_callout }}</div>
+    </div>
+  </section>
+
+  <div class="code mono">
+    <div class="bar">THE FIX</div>
+    {% for line in s.minus %}
+    <div class="ln minus">{{ line }}<span class="strike" style="--w: {{ line|length }}ch"></span></div>
+    {% endfor %}
+    {% for line in s.plus %}
+    {% set start = t.type + loop.index0 * 0.6 %}
+    <div class="ln plus"><span class="typed" style="--n: {{ line|length }}ch; animation: type {{ [line|length * 0.03, 0.6]|min|round(2) }}s {{ start }}s steps({{ line|length }}) both, blink .5s step-end infinite">{{ line }}</span></div>
+    {% endfor %}
+  </div>
+
+  {% if s.log_before %}
+  <div class="log mono">
+    <div class="bar">REQUEST LOG &middot; {{ s.attack_label }}</div>
+    <div class="first">
+    {% for r in s.log_before %}
+      <div class="row" style="top: {{ 44 + loop.index0 * 29 }}px; animation: line .3s {{ t.attack + 0.3 + loop.index0 * 0.5 }}s both">{{ r.text }}<b class="ALLOW">ALLOW</b></div>
+    {% endfor %}
+    </div>
+    {% for r in s.log_after %}
+      <div class="row" style="top: {{ 44 + loop.index0 * 29 }}px; animation: line .3s {{ t.safe + 0.2 + loop.index0 * 0.55 }}s both">{{ r.text }}<b class="{{ 'OK' if r.allowed else 'DENY' }}">{{ 'ALLOW' if r.allowed else 'DENY' }}</b></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  </main>
+
+  <div class="footer">
+    <div><strong>{{ check_id }}</strong> &middot; <span class="mono">{{ resource }}</span></div>
+    <div><span class="verified">Verified:</span> misconfigured FAILS, fix PASSES &middot; Checkov {{ checkov_version }}</div>
+    <div>{{ repo }}</div>
+  </div>
+</body>
+</html>

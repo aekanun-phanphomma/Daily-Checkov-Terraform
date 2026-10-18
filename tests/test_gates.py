@@ -77,17 +77,25 @@ def test_code_diff_must_come_from_the_code():
         gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
 
 
-def test_after_panel_needs_a_blocked_edge():
+def test_roles_must_be_different_things():
+    # The old card drew "NSG Rule -> NSG Rule": one thing guarding itself.
     spec = copy.deepcopy(DIAGRAM)
-    for edge in spec["after"]["edges"]:
-        edge.pop("blocked")
-    assert "blocked" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    spec["target"]["label"] = "public  ACCESS block"
+    assert "same label" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    spec = copy.deepcopy(DIAGRAM)
+    spec["ally"] = {"label": "Anonymous client"}
+    assert "same label" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
 
 
-def test_edges_must_reference_nodes():
+def test_spec_is_one_path_not_a_graph():
+    # Free-form nodes/edges let the model draw pictures the story template
+    # cannot tell; the schema now only has the roles the card draws.
     spec = copy.deepcopy(DIAGRAM)
-    spec["before"]["edges"][0]["to"] = "ghost"
-    assert "ghost" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    spec.pop("gate")
+    assert "gate" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
+    spec = copy.deepcopy(DIAGRAM)
+    spec["attacker"]["type"] = "control"
+    assert "control" in fails(gate_diagram, spec, CONTENT["bad_tf"], CONTENT["good_tf"])
 
 
 def test_extra_keys_and_aligned_diff_lines_are_tidied_not_failed():
@@ -101,15 +109,6 @@ def test_extra_keys_and_aligned_diff_lines_are_tidied_not_failed():
     content = {**CONTENT, "notes": "extra"}
     gate_schema(content)
     assert "notes" not in content
-
-
-def test_unknown_icon_is_dropped_not_failed():
-    spec = copy.deepcopy(DIAGRAM)
-    spec["before"]["nodes"][1]["icon"] = "s3-logo"
-    spec["after"]["nodes"][1]["icon"] = "shield"
-    gate_diagram(spec, CONTENT["bad_tf"], CONTENT["good_tf"])
-    assert "icon" not in spec["before"]["nodes"][1]
-    assert spec["after"]["nodes"][1]["icon"] == "shield"
 
 
 def test_normalize_ignores_alignment_and_comments():
