@@ -1,0 +1,20 @@
+{
+  "title": "Restrict Azure Storage Blob Public Access",
+  "attacker": {
+    "type": "internet",
+    "label": "Anonymous user"
+  },
+  "gate": {
+    "label": "Blob public access"
+  },
+  "target": {
+    "label": "Storage blobs"
+  },
+  "attack_label": "HTTPS GET blob",
+  "risk_callout": "Anonymous clients can directly read data from publicly exposed containers.",
+  "control_callout": "Prevents any container or blob from permitting anonymous read requests.",
+  "code_diff": [
+    "- allow_nested_items_to_be_public = true",
+    "+ allow_nested_items_to_be_public = false"
+  ]
+}

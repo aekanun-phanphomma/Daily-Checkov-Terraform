@@ -1,0 +1,41 @@
+{
+  "rule": {
+    "id": "CKV_AZURE_190",
+    "cloud": "azure",
+    "resource": "azurerm_storage_account",
+    "priority": "P1",
+    "topic": "public-exposure",
+    "enabled": true
+  },
+  "check_name": "Ensure that Storage blobs restrict public access",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/azure/StorageBlobRestrictPublicAccess.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-190",
+  "format": "inside",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 4,
+  "repairs_used": 2,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": false,
+      "gate": "G6b fresh",
+      "detail": "last line repeats a recent post's closing ('How do you ensure your infrastructure code consistently enfo'); close differently"
+    },
+    {
+      "call": "content/repair-1",
+      "ok": false,
+      "gate": "G5 good must PASS",
+      "detail": "expected CKV_AZURE_190 passed and none of ['CKV_AZURE_190', 'CKV_AZURE_59'] failed. Results:\n[\n {\n  \"check_id\": \"CKV_AZURE_190\",\n  \"result\": \"PASSED\",\n  \"resource\": \"azurerm_storage_account.example\",\n  \"evaluated_keys\": [\n   \"allow_nested_items_to_be_public\"\n  ]\n },\n {\n  \"check_id\": \"CKV_AZURE_59\",\n  \"result\": \"FAILED\",\n  \"resource\": \"azurerm_storage_account.example\",\n  \"evaluated_keys\": [\n   \"public_network_access_enabled\"\n  ]\n }\n]"
+    },
+    {
+      "call": "content/repair-2",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-19",
+  "skipped_before": []
+}
