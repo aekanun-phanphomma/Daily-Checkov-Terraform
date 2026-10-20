@@ -1,0 +1,35 @@
+{
+  "rule": {
+    "id": "CKV_GCP_42",
+    "cloud": "gcp",
+    "resource": "google_project_iam_member",
+    "priority": "P1",
+    "topic": "iam-wildcard",
+    "enabled": true
+  },
+  "check_name": "Ensure that Service Account has no Admin privileges",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/gcp/GoogleProjectAdminServiceAccount.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-4",
+  "format": "timeline",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 3,
+  "repairs_used": 1,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": false,
+      "gate": "G8 render",
+      "detail": "diagram content does not fit the 1200x1500 canvas (too wide: Compromised workload); shorten labels, callouts or code_diff"
+    },
+    {
+      "call": "diagram/repair-1",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-20",
+  "skipped_before": []
+}

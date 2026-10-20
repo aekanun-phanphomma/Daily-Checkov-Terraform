@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"google_project_iam_member\" \"example\" {\n  project = \"example-project\"\n  role    = \"roles/storage.admin\"\n  member  = \"serviceAccount:app-sa@example-project.iam.gserviceaccount.com\"\n}\n",
+  "good_tf": "resource \"google_project_iam_member\" \"example\" {\n  project = \"example-project\"\n  role    = \"roles/storage.objectViewer\" # FIX: grant least-privilege non-admin role\n  member  = \"serviceAccount:app-sa@example-project.iam.gserviceaccount.com\"\n}\n",
+  "why_it_matters": [
+    "A compromised workload using the service account inherits full administrative privileges across project resources.",
+    "Through cloud service APIs, an attacker holding admin tokens can read, overwrite, or delete project assets and alter access policies.",
+    "Restricting service accounts to specific, non-administrative roles limits the blast radius if application credentials are leaked."
+  ],
+  "post_en": "You apply a project IAM binding with role = \"roles/storage.admin\".\nStep 1: An attacker exploits an application vulnerability and extracts service account tokens from the instance metadata endpoint.\nStep 2: Using the Google Cloud Storage API, the attacker reads, alters, and deletes storage objects across every bucket in the project.\nStep 3: Through bucket IAM APIs, the attacker configures external access rules to maintain persistence without triggering project-level alarms.\nCKV_GCP_42 fails when a user-managed service account is assigned any role containing admin, editor, or owner.\nFix this by changing the role argument to a least-privilege role such as \"roles/storage.objectViewer\".\nWould your pipeline have stopped this privilege escalation before apply?"
+}

@@ -1,0 +1,23 @@
+{
+  "title": "Remove Admin Privileges from Service Account",
+  "attacker": {
+    "type": "user",
+    "label": "Compromised app"
+  },
+  "gate": {
+    "label": "Project IAM"
+  },
+  "target": {
+    "label": "Cloud Storage"
+  },
+  "ally": {
+    "label": "App service"
+  },
+  "attack_label": "storage.buckets.delete",
+  "risk_callout": "Admin role allows deleting buckets and modifying access controls project-wide.",
+  "control_callout": "Viewer role restricts the service account to reading object data only.",
+  "code_diff": [
+    "- role = \"roles/storage.admin\"",
+    "+ role = \"roles/storage.objectViewer\""
+  ]
+}
