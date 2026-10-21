@@ -1,0 +1,64 @@
+{
+  "rule": {
+    "id": "CKV_AWS_45",
+    "cloud": "aws",
+    "resource": "aws_lambda_function",
+    "priority": "P1",
+    "topic": "secrets",
+    "enabled": true
+  },
+  "check_name": "Ensure no hard-coded secrets exist in lambda environment",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/aws/LambdaEnvironmentCredentials.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/secrets-policies/bc-aws-secrets-3",
+  "format": "review",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 3,
+  "repairs_used": 1,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": false,
+      "gate": "G8 render",
+      "detail": "diagram content does not fit the 1200x1500 canvas (too wide: Compromised IAM user); shorten labels, callouts or code_diff"
+    },
+    {
+      "call": "diagram/repair-1",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-21",
+  "skipped_before": [
+    {
+      "check_id": "CKV_AWS_46",
+      "reason": "G8 render: diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff",
+      "attempts": [
+        {
+          "call": "content",
+          "ok": true
+        },
+        {
+          "call": "diagram",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff"
+        },
+        {
+          "call": "diagram/repair-1",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff"
+        },
+        {
+          "call": "diagram/repair-2",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff"
+        }
+      ]
+    }
+  ]
+}

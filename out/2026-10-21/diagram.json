@@ -1,0 +1,20 @@
+{
+  "title": "No Secrets in Lambda Env",
+  "attacker": {
+    "type": "user",
+    "label": "IAM user"
+  },
+  "gate": {
+    "label": "Lambda env vars"
+  },
+  "target": {
+    "label": "AWS resources"
+  },
+  "attack_label": "lambda:GetFunction",
+  "risk_callout": "Plaintext credentials in environment variables expose access keys to viewers.",
+  "control_callout": "Storing a secret reference avoids exposing credentials in function settings.",
+  "code_diff": [
+    "- AWS_ACCESS_KEY_ID = \"AKIAIOSFODNN7EXAMPLE\"",
+    "+ SECRET_NAME = \"example-secret-name\""
+  ]
+}

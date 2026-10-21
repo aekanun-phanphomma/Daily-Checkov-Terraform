@@ -1,0 +1,17 @@
+An access key string committed to a Lambda environment block is currently sitting in the review queue awaiting production deployment.
+
+Please drop this static key from the environment configuration. Storing access keys inside function variables writes long-lived credentials into version control, deployment plans, and state files. Any identity with lambda:GetFunctionConfiguration or read access to the repository can capture the key and authenticate against your cloud APIs directly without an audit trail.
+
+Instead of passing static credentials here, configure the function to rely on its IAM execution role or pass a secret identifier like SECRET_NAME pointing to AWS Secrets Manager. The function can retrieve short-lived tokens or dynamic secrets at runtime over HTTPS using IAM authorization.
+
+CKV_AWS_45 would have flagged this embedded credential automatically before it merged.
+
+Reviewers should never accept plaintext credentials in configuration when execution roles and secret managers eliminate the need for static keys.
+
+Proof: both versions, verified with Checkov 3.3.29 (bad must FAIL, fix must PASS):
+https://github.com/aekanun-phanphomma/Daily-Checkov-Terraform/tree/main/out/2026-10-21
+
+Check source: https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/aws/LambdaEnvironmentCredentials.py
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/secrets-policies/bc-aws-secrets-3
+
+#Terraform #Checkov #DevSecOps #IaC #AWS
