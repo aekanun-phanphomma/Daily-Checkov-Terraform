@@ -1,0 +1,35 @@
+{
+  "rule": {
+    "id": "CKV_AZURE_141",
+    "cloud": "azure",
+    "resource": "azurerm_kubernetes_cluster",
+    "priority": "P1",
+    "topic": "access-control",
+    "enabled": true
+  },
+  "check_name": "Ensure AKS local admin account is disabled",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/azure/AKSLocalAdminDisabled.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-iam-policies/ensure-azure-kubernetes-service-aks-local-admin-account-is-disabled",
+  "format": "oneline",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 3,
+  "repairs_used": 1,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": false,
+      "gate": "G5 good must PASS",
+      "detail": "expected CKV_AZURE_141 passed and none of ['CKV_AZURE_115', 'CKV_AZURE_141'] failed. Results:\n[\n {\n  \"check_id\": \"CKV_AZURE_141\",\n  \"result\": \"PASSED\",\n  \"resource\": \"azurerm_kubernetes_cluster.example\",\n  \"evaluated_keys\": [\n   \"local_account_disabled\"\n  ]\n },\n {\n  \"check_id\": \"CKV_AZURE_115\",\n  \"result\": \"FAILED\",\n  \"resource\": \"azurerm_kubernetes_cluster.example\",\n  \"evaluated_keys\": [\n   \"private_cluster_enabled\"\n  ]\n }\n]"
+    },
+    {
+      "call": "content/repair-1",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-22",
+  "skipped_before": []
+}

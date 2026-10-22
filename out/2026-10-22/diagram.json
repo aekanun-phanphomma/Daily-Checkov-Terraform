@@ -1,0 +1,23 @@
+{
+  "title": "Disable AKS Local Admin Accounts",
+  "attacker": {
+    "type": "user",
+    "label": "Compromised user"
+  },
+  "gate": {
+    "label": "AKS local auth"
+  },
+  "target": {
+    "label": "Kubernetes API"
+  },
+  "ally": {
+    "label": "Entra ID user"
+  },
+  "attack_label": "HTTPS :443 (local admin)",
+  "risk_callout": "Bypasses centralized Azure AD controls using unmanaged local cluster admin credentials.",
+  "control_callout": "Forces all cluster access through Azure AD, blocking local credential access.",
+  "code_diff": [
+    "- local_account_disabled = false",
+    "+ local_account_disabled = true"
+  ]
+}
