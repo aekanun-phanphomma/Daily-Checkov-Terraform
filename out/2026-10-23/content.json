@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"google_storage_bucket\" \"example\" {\n  name     = \"example-secure-data-bucket\"\n  location = \"US\"\n}\n",
+  "good_tf": "resource \"google_storage_bucket\" \"example\" {\n  name                     = \"example-secure-data-bucket\"\n  location                 = \"US\"\n  public_access_prevention = \"enforced\" # FIX: enforce public access prevention\n}\n",
+  "why_it_matters": [
+    "Without public access prevention enforced, any IAM or ACL change granting allUsers or allAuthenticatedUsers immediately exposes bucket data to the internet over HTTPS.",
+    "An attacker can query Cloud Storage XML or JSON APIs without credentials to download sensitive objects or list contents if public permissions are mistakenly applied.",
+    "Enforcing public access prevention blocks all access to allUsers and allAuthenticatedUsers, neutralizing accidental public IAM bindings or ACLs at the bucket level."
+  ],
+  "post_en": "Myth: Cloud Storage buckets reject anonymous HTTPS requests by default, making bucket-level guards redundant.\n\nFact: Default bucket settings permit IAM bindings or object ACLs to expose data. If an identity policy or automated pipeline grants roles to allUsers or allAuthenticatedUsers, unauthenticated clients can immediately query and download objects over the Cloud Storage JSON or XML APIs. Relying on default inheritance leaves data vulnerable to single-line IAM mistakes.\n\nThis check identifies storage buckets that do not explicitly require public access prevention to be enforced.\n\nTo resolve this, set public_access_prevention to enforced on the google_storage_bucket resource.\n\nWhich default cloud permission assumption has your team had to unlearn?"
+}

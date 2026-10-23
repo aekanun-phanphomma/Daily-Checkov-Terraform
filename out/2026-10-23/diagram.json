@@ -1,0 +1,21 @@
+{
+  "title": "Enforce Public Access Prevention on Cloud Storage",
+  "attacker": {
+    "type": "internet",
+    "label": "Anonymous Internet"
+  },
+  "gate": {
+    "label": "Public Access Block"
+  },
+  "target": {
+    "label": "Storage Bucket"
+  },
+  "attack_label": "storage.objects.get",
+  "risk_callout": "Bucket data can be made public to all users via permissive IAM or ACLs.",
+  "control_callout": "Enforces public access prevention, blocking all internet-wide access.",
+  "code_diff": [
+    "+ public_access_prevention = \"enforced\"",
+    "- location = \"US\"",
+    "+ location = \"US\""
+  ]
+}

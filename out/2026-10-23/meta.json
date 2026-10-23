@@ -1,0 +1,29 @@
+{
+  "rule": {
+    "id": "CKV_GCP_114",
+    "cloud": "gcp",
+    "resource": "google_storage_bucket",
+    "priority": "P1",
+    "topic": "public-exposure",
+    "enabled": true
+  },
+  "check_name": "Ensure public access prevention is enforced on Cloud Storage bucket",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/gcp/GoogleStoragePublicAccessPrevention.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-google-cloud-114",
+  "format": "myth",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-23",
+  "skipped_before": []
+}

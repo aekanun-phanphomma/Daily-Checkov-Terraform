@@ -55,6 +55,13 @@
       "cloud": "azure",
       "linkedin": "urn:li:ugcPost:7518901475964571649",
       "facebook": "981085051712235"
+    },
+    {
+      "date": "2026-10-23",
+      "check_id": "CKV_GCP_114",
+      "cloud": "gcp",
+      "linkedin": null,
+      "facebook": null
     }
   ]
 }
