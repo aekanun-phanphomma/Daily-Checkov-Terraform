@@ -1,0 +1,23 @@
+{
+  "title": "Restrict Wildcard Actions in IAM Policy",
+  "attacker": {
+    "type": "user",
+    "label": "Compromised role"
+  },
+  "gate": {
+    "label": "IAM policy"
+  },
+  "target": {
+    "label": "AWS control plane"
+  },
+  "ally": {
+    "label": "Authorized reader"
+  },
+  "attack_label": "Admin API calls",
+  "risk_callout": "Wildcard actions allow full administrative takeover of all account services.",
+  "control_callout": "Scopes actions to read-only retrieval, blocking administrative and destructive calls.",
+  "code_diff": [
+    "- actions = [\"*\"]",
+    "+ actions = [\"s3:GetObject\"]"
+  ]
+}

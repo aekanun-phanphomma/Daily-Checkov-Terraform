@@ -1,0 +1,10 @@
+{
+  "bad_tf": "data \"aws_iam_policy_document\" \"example\" {\n  statement {\n    actions   = [\"*\"]\n    resources = [\"*\"]\n  }\n}\n",
+  "good_tf": "data \"aws_iam_policy_document\" \"example\" {\n  statement {\n    actions   = [\"s3:GetObject\"] # FIX: replace wildcard action with specific API\n    resources = [\"*\"]\n  }\n}\n",
+  "why_it_matters": [
+    "Wildcard actions allow any caller assuming the policy to invoke every administrative and operational API call across AWS services in the account.",
+    "If an identity using this policy is compromised, an attacker can disable logging, manipulate IAM configurations, and exfiltrate data from all resources.",
+    "Scoping actions down to precise API calls enforces the principle of least privilege and prevents lateral movement across unintended AWS services."
+  ],
+  "post_en": "Can you pass policy validation simply by omitting the effect argument on an IAM statement?\n\nWhen inspecting an aws_iam_policy_document data block, the scanner looks at each statement block for two arguments: effect and actions. The rule flags a failure whenever the actions list contains an asterisk while effect is explicitly set to Allow or left unspecified.\n\nA detail that catches teams off guard is that omitting effect does not let wildcard actions slip through. Because Terraform defaults the statement effect to Allow, the scanner explicitly treats a missing effect as Allow and flags the asterisk action. Conversely, a statement with effect set to Deny and an asterisk action will pass without issue.\n\nAllowing a wildcard action gives any identity using the policy full permission to execute administrative and data-plane operations across every service in the AWS account. A compromised credential or workload can immediately disable audit trails, create new credentials, or delete infrastructure.\n\nResolve this by replacing the wildcard in the actions list with specific API actions like s3:GetObject.\n\nWhich custom policy rules do you run in your CI pipelines to prevent overprivileged statements from reaching production?"
+}

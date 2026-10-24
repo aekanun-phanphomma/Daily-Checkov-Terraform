@@ -1,0 +1,29 @@
+{
+  "rule": {
+    "id": "CKV_AWS_49",
+    "cloud": "aws",
+    "resource": "aws_iam_policy_document",
+    "priority": "P1",
+    "topic": "iam-wildcard",
+    "enabled": true
+  },
+  "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's actions",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/data/aws/StarActionPolicyDocument.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-iam-43",
+  "format": "inside",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-24",
+  "skipped_before": []
+}
