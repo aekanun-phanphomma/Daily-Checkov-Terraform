@@ -1,0 +1,23 @@
+{
+  "title": "Restrict Internet RDP Access in NSG",
+  "attacker": {
+    "type": "internet",
+    "label": "Internet scanner"
+  },
+  "gate": {
+    "label": "NSG inbound rule"
+  },
+  "target": {
+    "label": "Windows VM"
+  },
+  "ally": {
+    "label": "Internal subnet"
+  },
+  "attack_label": "TCP 3389 (RDP)",
+  "risk_callout": "Exposed RDP port invites brute-force credential stuffing and remote exploitation.",
+  "control_callout": "Inbound RDP is confined to internal IP ranges, blocking public internet probes.",
+  "code_diff": [
+    "- source_address_prefix = \"*\"",
+    "+ source_address_prefix = \"10.0.0.0/16\""
+  ]
+}
