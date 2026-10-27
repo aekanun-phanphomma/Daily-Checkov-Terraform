@@ -1,0 +1,35 @@
+{
+  "rule": {
+    "id": "CKV_GCP_60",
+    "cloud": "gcp",
+    "resource": "google_sql_database_instance",
+    "priority": "P1",
+    "topic": "public-exposure",
+    "enabled": true
+  },
+  "check_name": "Ensure Cloud SQL database does not have public IP",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/gcp/GoogleCloudSqlServerNoPublicIP.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-11",
+  "format": "review",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 3,
+  "repairs_used": 1,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": false,
+      "gate": "G6 post text",
+      "detail": "post_en contains a hashtag; posts are plain English and the pipeline adds links and hashtags"
+    },
+    {
+      "call": "content/repair-1",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-27",
+  "skipped_before": []
+}

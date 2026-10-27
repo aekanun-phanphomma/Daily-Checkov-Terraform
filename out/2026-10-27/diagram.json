@@ -1,0 +1,20 @@
+{
+  "title": "Disable Public IP on Cloud SQL",
+  "attacker": {
+    "type": "internet",
+    "label": "Internet scanner"
+  },
+  "gate": {
+    "label": "Public IP assignment"
+  },
+  "target": {
+    "label": "Cloud SQL database"
+  },
+  "attack_label": "TCP 1433 (MSSQL)",
+  "risk_callout": "Public IPv4 exposes the database port to scanning and credential stuffing.",
+  "control_callout": "Disabling public IPv4 prevents internet actors from reaching the database endpoint.",
+  "code_diff": [
+    "- ipv4_enabled = true",
+    "+ ipv4_enabled = false"
+  ]
+}

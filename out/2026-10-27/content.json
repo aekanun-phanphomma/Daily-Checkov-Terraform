@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"google_sql_database_instance\" \"example\" {\n  name             = \"example-database\"\n  database_version = \"SQLSERVER_2019_STANDARD\"\n  region           = \"us-central1\"\n  settings {\n    tier = \"db-custom-2-7680\"\n    ip_configuration {\n      ipv4_enabled = true\n    }\n  }\n}\n",
+  "good_tf": "resource \"google_sql_database_instance\" \"example\" {\n  name             = \"example-database\"\n  database_version = \"SQLSERVER_2019_STANDARD\"\n  region           = \"us-central1\"\n  settings {\n    tier = \"db-custom-2-7680\"\n    ip_configuration {\n      ipv4_enabled = false # FIX: Disable public IP assignment for Cloud SQL\n    }\n  }\n}\n",
+  "why_it_matters": [
+    "Assigning a public IPv4 address exposes the Cloud SQL database endpoint directly to the internet.",
+    "Attackers scanning cloud IP ranges can discover the SQL port and launch brute-force attacks or exploit protocol vulnerabilities.",
+    "Setting ipv4_enabled to false ensures the database is accessible only via private connectivity such as VPC Peering."
+  ],
+  "post_en": "Pull request 402 introduces a new Cloud SQL instance with ipv4_enabled set to true.\n\nPlease set ipv4_enabled to false inside the ip_configuration block. Enabling a public IP assigns a publicly reachable IPv4 address to this Cloud SQL instance on the public internet.\n\nEven if authorized networks restrict traffic, exposing database listeners to the internet significantly increases attack surface for brute-force attacks and protocol-level vulnerabilities. Attackers scan public cloud IP ranges continuously looking for open database ports.\n\nPlease update ipv4_enabled to false and connect using private IP through VPC Peering or Private Service Connect.\n\nStatic analysis with CKV_GCP_60 flags public IPv4 addresses on Cloud SQL instances automatically.\n\nAlways enforce private network connectivity for database instances at the infrastructure level."
+}
