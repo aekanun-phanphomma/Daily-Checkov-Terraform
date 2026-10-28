@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"aws_db_instance\" \"example\" {\n  allocated_storage   = 20\n  engine              = \"mysql\"\n  instance_class      = \"db.t3.micro\"\n  publicly_accessible = true\n}\n",
+  "good_tf": "resource \"aws_db_instance\" \"example\" {\n  allocated_storage   = 20\n  engine              = \"mysql\"\n  instance_class      = \"db.t3.micro\"\n  publicly_accessible = false # FIX: disable public IP address allocation\n}\n",
+  "why_it_matters": [
+    "Assigning a public IP to an RDS instance allows anyone on the Internet to probe database listener ports directly.",
+    "Network-level exposure leaves database engines vulnerable to automated credential brute-forcing and unpatched protocol exploits.",
+    "Setting publicly_accessible to false prevents AWS from associating a public IP, restricting access to private subnets."
+  ],
+  "post_en": "Internet-facing database instances allow external attackers to probe database ports and launch automated brute-force attacks against database credentials.\nSet publicly_accessible to false inside the aws_db_instance resource block.\nThis configuration prevents AWS from assigning a public IP address and isolates database endpoints strictly within private VPC subnets.\nCKV_AWS_17 fails the first version and passes the second."
+}

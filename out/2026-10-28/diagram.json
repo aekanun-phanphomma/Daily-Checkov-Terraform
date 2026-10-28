@@ -1,0 +1,20 @@
+{
+  "title": "Disable Public Access on RDS Instances",
+  "attacker": {
+    "type": "internet",
+    "label": "Internet scanner"
+  },
+  "gate": {
+    "label": "Public IP assignment"
+  },
+  "target": {
+    "label": "MySQL database"
+  },
+  "attack_label": "TCP 3306 (MySQL)",
+  "risk_callout": "Database gets a public IP and exposes listening ports directly to the internet.",
+  "control_callout": "Removes the public IP, keeping database traffic confined to internal networks.",
+  "code_diff": [
+    "- publicly_accessible = true",
+    "+ publicly_accessible = false"
+  ]
+}
