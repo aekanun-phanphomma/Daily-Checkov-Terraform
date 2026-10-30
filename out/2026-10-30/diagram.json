@@ -1,0 +1,24 @@
+{
+  "title": "Disable Password Auth on Linux VMs",
+  "attacker": {
+    "type": "internet",
+    "label": "Internet attacker"
+  },
+  "gate": {
+    "label": "SSH auth policy"
+  },
+  "target": {
+    "label": "Linux VM shell"
+  },
+  "ally": {
+    "label": "SSH key holder"
+  },
+  "attack_label": "TCP 22 (SSH brute-force)",
+  "risk_callout": "Weak or guessed credentials expose the virtual machine to direct shell takeover.",
+  "control_callout": "Disabling password auth stops brute-force attempts by requiring an SSH key.",
+  "code_diff": [
+    "- disable_password_authentication = false",
+    "+ disable_password_authentication = true",
+    "- admin_password = \"P@ssw0rd1234!\""
+  ]
+}

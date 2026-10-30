@@ -1,0 +1,35 @@
+{
+  "rule": {
+    "id": "CKV_AZURE_149",
+    "cloud": "azure",
+    "resource": "azurerm_linux_virtual_machine",
+    "priority": "P1",
+    "topic": "access-control",
+    "enabled": true
+  },
+  "check_name": "Ensure that Virtual machine does not enable password authentication",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/azure/VMDisablePasswordAuthentication.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-azure-virtual-machine-does-not-enable-password-authentication",
+  "format": "myth",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 3,
+  "repairs_used": 1,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": false,
+      "gate": "G3 terraform",
+      "detail": "good/: `terraform validate` failed:\nError: decoding \"admin_ssh_key.0.public_key\" for public key data\n\n  with azurerm_linux_virtual_machine.example,\n  on main.tf line 1, in resource \"azurerm_linux_virtual_machine\" \"example\":\n   1: resource \"azurerm_linux_virtual_machine\" \"example\" {"
+    },
+    {
+      "call": "content/repair-1",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-30",
+  "skipped_before": []
+}
