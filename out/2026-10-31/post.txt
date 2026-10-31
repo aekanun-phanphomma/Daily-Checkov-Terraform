@@ -1,0 +1,19 @@
+Can a firewall rule that omits the direction argument still expose port 3389 to the entire internet?
+
+The check targets google_compute_firewall resources and evaluates ingress configurations granting access to TCP port 3389, the standard port for Remote Desktop Protocol. It inspects the allow block for protocols and ports that include 3389, alongside the source_ranges attribute. Any rule permitting port 3389 where source_ranges includes 0.0.0.0/0 fails immediately. Rules specifying restricted CIDR blocks, such as private RFC 1918 subnets, pass.
+
+A detail that surprises many engineers is that the direction argument defaults to INGRESS when omitted in Terraform. A firewall rule declared without an explicit direction will still be evaluated as an ingress rule, meaning an open source range on port 3389 triggers a failure even if direction was never specified.
+
+Broad exposure on port 3389 allows external adversaries to reach Windows compute instances directly over RDP. Attackers routinely probe open endpoints to attempt credential stuffing, brute-force administrative accounts, and establish interactive graphical sessions inside the VPC.
+
+To resolve this, replace the open 0.0.0.0/0 CIDR in source_ranges with trusted private IP blocks such as 10.0.0.0/8 or dedicated bastion subnet ranges.
+
+Which automated controls do you run alongside static analysis to detect overly permissive ingress rules?
+
+Proof: both versions, verified with Checkov 3.3.29 (bad must FAIL, fix must PASS):
+https://github.com/aekanun-phanphomma/Daily-Checkov-Terraform/tree/main/out/2026-10-31
+
+Check source: https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/gcp/GoogleComputeFirewallUnrestrictedIngress3389.py
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-2
+
+#Terraform #Checkov #DevSecOps #IaC #GoogleCloud

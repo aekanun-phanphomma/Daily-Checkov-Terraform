@@ -1,0 +1,23 @@
+{
+  "title": "Restrict Public RDP Access in GCP Firewall",
+  "attacker": {
+    "type": "internet",
+    "label": "Internet scanner"
+  },
+  "gate": {
+    "label": "VPC firewall"
+  },
+  "target": {
+    "label": "Windows VM"
+  },
+  "ally": {
+    "label": "Internal subnet"
+  },
+  "attack_label": "TCP 3389 (RDP)",
+  "risk_callout": "Anyone can attempt brute-force login on exposed Windows instances.",
+  "control_callout": "Restricts RDP ingress to private ranges, blocking public internet traffic.",
+  "code_diff": [
+    "- source_ranges = [\"0.0.0.0/0\"]",
+    "+ source_ranges = [\"10.0.0.0/8\"]"
+  ]
+}
