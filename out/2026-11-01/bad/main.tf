@@ -1,0 +1,16 @@
+resource "aws_kms_key" "example" {
+  description = "Example KMS key"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      }
+    ]
+  })
+}

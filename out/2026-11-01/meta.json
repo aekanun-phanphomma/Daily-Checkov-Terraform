@@ -1,0 +1,92 @@
+{
+  "rule": {
+    "id": "CKV_AWS_33",
+    "cloud": "aws",
+    "resource": "aws_kms_key",
+    "priority": "P1",
+    "topic": "iam-wildcard",
+    "enabled": true
+  },
+  "check_name": "Ensure KMS key policy does not contain wildcard (*) principal",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/aws/KMSKeyWildcardPrincipal.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-kms-key-policy-does-not-contain-wildcard-principal",
+  "format": "timeline",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 3,
+  "repairs_used": 1,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": false,
+      "gate": "G8 render",
+      "detail": "diagram content does not fit the 1200x1500 canvas (too wide: External AWS account); shorten labels, callouts or code_diff"
+    },
+    {
+      "call": "diagram/repair-1",
+      "ok": true
+    }
+  ],
+  "date": "2026-11-01",
+  "skipped_before": [
+    {
+      "check_id": "CKV_AWS_46",
+      "reason": "G8 render: diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff",
+      "attempts": [
+        {
+          "call": "content",
+          "ok": false,
+          "gate": "G6 post text",
+          "detail": "why_it_matters[1] contains a URL; posts are plain English and the pipeline adds links and hashtags"
+        },
+        {
+          "call": "content/repair-1",
+          "ok": true
+        },
+        {
+          "call": "diagram",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff"
+        },
+        {
+          "call": "diagram/repair-2",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff"
+        }
+      ]
+    },
+    {
+      "check_id": "CKV_AWS_274",
+      "reason": "G8 render: diagram content does not fit the 1200x1500 canvas (too wide: managed_policy_arns = [\"arn:aws:iam::aws:policy/AdministratorAccess\"]); shorten labels, callouts or code_diff",
+      "attempts": [
+        {
+          "call": "content",
+          "ok": true
+        },
+        {
+          "call": "diagram",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: managed_policy_arns = [\"arn:aws:iam::aws:policy/AdministratorAccess\"]); shorten labels, callouts or code_diff"
+        },
+        {
+          "call": "diagram/repair-1",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: managed_policy_arns = [\"arn:aws:iam::aws:policy/AdministratorAccess\"]); shorten labels, callouts or code_diff"
+        },
+        {
+          "call": "diagram/repair-2",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: managed_policy_arns = [\"arn:aws:iam::aws:policy/AdministratorAccess\"]); shorten labels, callouts or code_diff"
+        }
+      ]
+    }
+  ]
+}

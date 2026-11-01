@@ -1,0 +1,23 @@
+{
+  "title": "Restrict KMS Key Policy Principals",
+  "attacker": {
+    "type": "user",
+    "label": "External caller"
+  },
+  "gate": {
+    "label": "Key policy"
+  },
+  "target": {
+    "label": "KMS key"
+  },
+  "ally": {
+    "label": "Account root"
+  },
+  "attack_label": "kms:Decrypt",
+  "risk_callout": "Wildcard principal allows external identities to use the key.",
+  "control_callout": "Restricting principal to trusted account identity blocks external calls.",
+  "code_diff": [
+    "- AWS = \"*\"",
+    "+ AWS = \"arn:aws:iam::123456789012:root\""
+  ]
+}

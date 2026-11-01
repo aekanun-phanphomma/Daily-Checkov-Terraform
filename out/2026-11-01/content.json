@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"aws_kms_key\" \"example\" {\n  description = \"Example KMS key\"\n  policy = jsonencode({\n    Version = \"2012-10-17\"\n    Statement = [\n      {\n        Effect = \"Allow\"\n        Principal = {\n          AWS = \"*\"\n        }\n        Action   = \"kms:*\"\n        Resource = \"*\"\n      }\n    ]\n  })\n}\n",
+  "good_tf": "resource \"aws_kms_key\" \"example\" {\n  description = \"Example KMS key\"\n  policy = jsonencode({\n    Version = \"2012-10-17\"\n    Statement = [\n      {\n        Effect = \"Allow\"\n        Principal = {\n          AWS = \"arn:aws:iam::123456789012:root\" # FIX: restrict principal to specific AWS account\n        }\n        Action   = \"kms:*\"\n        Resource = \"*\"\n      }\n    ]\n  })\n}\n",
+  "why_it_matters": [
+    "Setting Principal to a wildcard without conditions allows any authenticated AWS principal across the globe to use the KMS key.",
+    "An attacker in an external AWS account can call the kms:Decrypt API against the key ARN to decrypt captured application secrets.",
+    "Restricting the principal to a specific IAM identity or account root prevents unauthorized cross-account cryptographic access."
+  ],
+  "post_en": "You apply a key policy with Principal = { AWS = \"*\" } on a customer master key.\n\nStep 1: An external entity discovers the KMS key ARN through leaked ciphertext metadata.\nStep 2: The attacker authenticates with valid credentials from an unrelated AWS account.\nStep 3: The attacker calls the kms:Decrypt API against the target key ARN to decipher sensitive data.\nStep 4: The attacker issues kms:GenerateDataKey requests to seal tampered artifacts with your key.\n\nCKV_AWS_33 fails any KMS key policy allowing access to wildcard principals without a condition block.\n\nReplace the wildcard in Principal.AWS with a specific account root or IAM role ARN such as arn:aws:iam::123456789012:root.\n\nWould your deployment pipeline have blocked this key policy before apply?"
+}
