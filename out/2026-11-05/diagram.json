@@ -1,0 +1,20 @@
+{
+  "title": "Disable Anonymous ACR Image Pulls",
+  "attacker": {
+    "type": "internet",
+    "label": "Anonymous User"
+  },
+  "gate": {
+    "label": "ACR Access Policy"
+  },
+  "target": {
+    "label": "Container Images"
+  },
+  "attack_label": "docker pull",
+  "risk_callout": "Anonymous users can pull container images containing sensitive code and secrets.",
+  "control_callout": "Disabling anonymous pull forces authentication for all container image downloads.",
+  "code_diff": [
+    "- anonymous_pull_enabled = true",
+    "+ anonymous_pull_enabled = false"
+  ]
+}

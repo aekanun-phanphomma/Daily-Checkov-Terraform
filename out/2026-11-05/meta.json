@@ -1,0 +1,70 @@
+{
+  "rule": {
+    "id": "CKV_AZURE_138",
+    "cloud": "azure",
+    "resource": "azurerm_container_registry",
+    "priority": "P1",
+    "topic": "public-exposure",
+    "enabled": true
+  },
+  "check_name": "Ensures that ACR disables anonymous pulling of images",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/azure/ACRAnonymousPullDisabled.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-iam-policies/ensure-azure-acr-disables-anonymous-image-pulling",
+  "format": "review",
+  "model": "gemini-3.5-flash",
+  "llm_calls": 4,
+  "repairs_used": 2,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": false,
+      "gate": "G6 post text",
+      "detail": "post_en contains a hashtag; posts are plain English and the pipeline adds links and hashtags"
+    },
+    {
+      "call": "content/repair-1",
+      "ok": false,
+      "gate": "G5 good must PASS",
+      "detail": "expected CKV_AZURE_138 passed and none of ['CKV_AZURE_137', 'CKV_AZURE_138', 'CKV_AZURE_139'] failed. Results:\n[\n {\n  \"check_id\": \"CKV_AZURE_137\",\n  \"result\": \"PASSED\",\n  \"resource\": \"azurerm_container_registry.example\",\n  \"evaluated_keys\": [\n   \"admin_enabled\"\n  ]\n },\n {\n  \"check_id\": \"CKV_AZURE_138\",\n  \"result\": \"PASSED\",\n  \"resource\": \"azurerm_container_registry.example\",\n  \"evaluated_keys\": []\n },\n {\n  \"check_id\": \"CKV_AZURE_139\",\n  \"result\": \"FAILED\",\n  \"resource\": \"azurerm_container_registry.example\",\n  \"evaluated_keys\": [\n   \"public_network_access_enabled\"\n  ]\n }\n]"
+    },
+    {
+      "call": "content/repair-2",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-11-05",
+  "skipped_before": [
+    {
+      "check_id": "CKV_AZURE_113",
+      "reason": "G8 render: diagram content does not fit the 1200x1500 canvas (too wide: public_network_access_enabled = true); shorten labels, callouts or code_diff",
+      "attempts": [
+        {
+          "call": "content",
+          "ok": true
+        },
+        {
+          "call": "diagram",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: public_network_access_enabled = true); shorten labels, callouts or code_diff"
+        },
+        {
+          "call": "diagram/repair-1",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: public_network_access_enabled = true); shorten labels, callouts or code_diff"
+        },
+        {
+          "call": "diagram/repair-2",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: public_network_access_enabled = true); shorten labels, callouts or code_diff"
+        }
+      ]
+    }
+  ]
+}
