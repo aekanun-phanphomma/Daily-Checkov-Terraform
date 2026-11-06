@@ -1,0 +1,23 @@
+{
+  "title": "Restrict Public Cloud Run Access",
+  "attacker": {
+    "type": "internet",
+    "label": "Anonymous user"
+  },
+  "gate": {
+    "label": "Cloud Run IAM"
+  },
+  "target": {
+    "label": "Internal service"
+  },
+  "ally": {
+    "label": "Authorized SA"
+  },
+  "attack_label": "HTTPS :443",
+  "risk_callout": "Anonymous internet callers can trigger private application endpoints.",
+  "control_callout": "Requires authenticated requests from an explicitly assigned service account.",
+  "code_diff": [
+    "- member = \"allUsers\"",
+    "+ member = \"serviceAccount:my-sa@example-project.iam.gserviceaccount.com\""
+  ]
+}

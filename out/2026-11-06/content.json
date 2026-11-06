@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"google_cloud_run_service_iam_member\" \"invoker\" {\n  location = \"us-central1\"\n  service  = \"example-service\"\n  role     = \"roles/run.invoker\"\n  member   = \"allUsers\"\n}\n",
+  "good_tf": "resource \"google_cloud_run_service_iam_member\" \"invoker\" {\n  location = \"us-central1\"\n  service  = \"example-service\"\n  role     = \"roles/run.invoker\"\n  member   = \"serviceAccount:my-sa@example-project.iam.gserviceaccount.com\" # FIX: restrict member to an explicit service account\n}\n",
+  "why_it_matters": [
+    "Granting roles/run.invoker to allUsers or allAuthenticatedUsers allows anyone on the Internet to invoke HTTP endpoints on the Cloud Run service without authentication.",
+    "Anonymous invocation can lead to unauthorized data retrieval, execution of internal workload logic, and unexpected compute consumption charges.",
+    "Restricting the IAM member to explicit service accounts or groups ensures that requests must present valid authentication tokens from authorized identities."
+  ],
+  "post_en": "Binding roles/run.invoker to allUsers allows unauthenticated Internet requests to reach Cloud Run HTTP endpoints.\nSet the member argument in google_cloud_run_service_iam_member to an explicit identity such as a service account.\nThis change restricts service execution to authenticated callers inside authorized projects or groups.\nCKV_GCP_102 fails the first version and passes the second."
+}

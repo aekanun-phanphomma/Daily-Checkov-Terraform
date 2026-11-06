@@ -1,0 +1,29 @@
+{
+  "rule": {
+    "id": "CKV_GCP_102",
+    "cloud": "gcp",
+    "resource": "google_cloud_run_service_iam_member",
+    "priority": "P1",
+    "topic": "public-exposure",
+    "enabled": true
+  },
+  "check_name": "Ensure that GCP Cloud Run services are not anonymously or publicly accessible",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/gcp/GCPCloudRunPrivateService.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-public-policies/ensure-cloud-run-service-is-not-anonymously-or-publicly-accessible",
+  "format": "oneline",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-11-06",
+  "skipped_before": []
+}
