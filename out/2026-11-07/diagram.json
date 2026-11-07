@@ -1,0 +1,23 @@
+{
+  "title": "Restrict Public RDP Ingress on Security Groups",
+  "attacker": {
+    "type": "internet",
+    "label": "Internet attacker"
+  },
+  "gate": {
+    "label": "Security group"
+  },
+  "target": {
+    "label": "Windows instance"
+  },
+  "ally": {
+    "label": "Internal network"
+  },
+  "attack_label": "TCP 3389 (RDP)",
+  "risk_callout": "Anyone on the internet can attempt RDP brute-force or exploit remote desktop services.",
+  "control_callout": "Only traffic from the internal CIDR block can connect to port 3389.",
+  "code_diff": [
+    "- cidr_blocks = [\"0.0.0.0/0\"]",
+    "+ cidr_blocks = [\"10.0.0.0/16\"]"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "rule": {
+    "id": "CKV_AWS_25",
+    "cloud": "aws",
+    "resource": "aws_security_group",
+    "priority": "P1",
+    "topic": "network-ingress",
+    "enabled": true
+  },
+  "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/aws/SecurityGroupUnrestrictedIngress3389.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-2",
+  "format": "myth",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-11-07",
+  "skipped_before": [
+    {
+      "check_id": "CKV_AWS_46",
+      "reason": "G7 diagram: - at code_diff/0: '- user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\\\\nexport AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\"' is too long",
+      "attempts": [
+        {
+          "call": "content",
+          "ok": true
+        },
+        {
+          "call": "diagram",
+          "ok": false,
+          "gate": "G7 diagram",
+          "detail": "- at code_diff/0: '- user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\\\\nexport AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\"' is too long"
+        },
+        {
+          "call": "diagram/repair-1",
+          "ok": false,
+          "gate": "G7 diagram",
+          "detail": "- at code_diff: ['U', 'N', 'K', 'N', 'O', 'W', 'N'] is too long\n- at code_diff/0: 'U' does not match '^[-+] [^ ]'\n- at code_diff/1: 'N' does not match '^[-+] [^ ]'\n- at code_diff/2: 'K' does not match '^[-+] [^ ]'\n- at code_diff/3: 'N' does not match '^[-+] [^ ]'\n- at code_diff/4: 'O' does not match '^[-+] [^ ]'\n- at code_diff/5: 'W' does not match '^[-+] [^ ]'\n- at code_diff/6: 'N' does not match '^[-+] [^ ]'"
+        },
+        {
+          "call": "diagram/repair-2",
+          "ok": false,
+          "gate": "G7 diagram",
+          "detail": "- at code_diff/0: '- user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\\\\nexport AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\"' is too long"
+        }
+      ]
+    }
+  ]
+}

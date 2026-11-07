@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"aws_security_group\" \"example\" {\n  name        = \"example-sg\"\n  description = \"Example security group\"\n\n  ingress {\n    from_port   = 3389\n    to_port     = 3389\n    protocol    = \"tcp\"\n    cidr_blocks = [\"0.0.0.0/0\"]\n  }\n}\n",
+  "good_tf": "resource \"aws_security_group\" \"example\" {\n  name        = \"example-sg\"\n  description = \"Example security group\"\n\n  ingress {\n    from_port   = 3389\n    to_port     = 3389\n    protocol    = \"tcp\"\n    cidr_blocks = [\"10.0.0.0/16\"] # FIX: restrict ingress to internal network\n  }\n}\n",
+  "why_it_matters": [
+    "Ingress from 0.0.0.0/0 to TCP port 3389 exposes the Remote Desktop Protocol service directly to the entire public internet.",
+    "Attackers can scan for open RDP endpoints to launch credential brute-force attacks or attempt remote code execution.",
+    "Restricting ingress to trusted internal CIDR ranges blocks unauthenticated internet traffic from reaching Windows instances."
+  ],
+  "post_en": "Myth: Port 3389 exposed to 0.0.0.0/0 is safe if instances require complex passwords and Network Level Authentication.\n\nFact: Opening TCP port 3389 to the entire internet allows any remote actor to initiate Remote Desktop Protocol handshakes, attempt credential stuffing, or exploit protocol implementation flaws before credentials are fully verified. Host-level defenses do not prevent denial of service or automated scanning when the network perimeter is wide open.\n\nCKV_AWS_25 fails any security group ingress rule that permits traffic to port 3389 from the 0.0.0.0/0 CIDR block.\n\nReplace 0.0.0.0/0 in the cidr_blocks argument with a specific private subnet such as 10.0.0.0/16 or manage administration through Systems Manager Session Manager.\n\nWhich network exposure assumption has your team had to unlearn recently?"
+}
