@@ -132,6 +132,13 @@
       "cloud": "aws",
       "linkedin": "urn:li:ugcPost:7524723008633081856",
       "facebook": "1685756469888967"
+    },
+    {
+      "date": "2026-11-08",
+      "check_id": "CKV_AZURE_39",
+      "cloud": "azure",
+      "linkedin": null,
+      "facebook": null
     }
   ]
 }

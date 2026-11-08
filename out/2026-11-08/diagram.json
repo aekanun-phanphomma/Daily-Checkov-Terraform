@@ -1,0 +1,23 @@
+{
+  "title": "Block Custom Subscription Owner Roles",
+  "attacker": {
+    "type": "user",
+    "label": "Rogue user"
+  },
+  "gate": {
+    "label": "Custom role"
+  },
+  "target": {
+    "label": "Subscription"
+  },
+  "ally": {
+    "label": "Auditor"
+  },
+  "attack_label": "ARM API",
+  "risk_callout": "Wildcard actions allow complete takeover of resources.",
+  "control_callout": "Restricts actions to read-only, blocking write access.",
+  "code_diff": [
+    "- actions = [\"*\"]",
+    "+ actions = [\"Microsoft.Resources/subscriptions/read\"]"
+  ]
+}

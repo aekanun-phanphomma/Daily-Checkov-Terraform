@@ -1,0 +1,35 @@
+{
+  "rule": {
+    "id": "CKV_AZURE_39",
+    "cloud": "azure",
+    "resource": "azurerm_role_definition",
+    "priority": "P1",
+    "topic": "iam-wildcard",
+    "enabled": true
+  },
+  "check_name": "Ensure that no custom subscription owner roles are created",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/azure/CutsomRoleDefinitionSubscriptionOwner.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-iam-policies/do-not-create-custom-subscription-owner-roles",
+  "format": "inside",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 3,
+  "repairs_used": 1,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": false,
+      "gate": "G8 render",
+      "detail": "diagram content does not fit the 1200x1500 canvas (too wide: Compromised identity); shorten labels, callouts or code_diff"
+    },
+    {
+      "call": "diagram/repair-1",
+      "ok": true
+    }
+  ],
+  "date": "2026-11-08",
+  "skipped_before": []
+}
