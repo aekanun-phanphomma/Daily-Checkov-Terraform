@@ -1,0 +1,29 @@
+{
+  "rule": {
+    "id": "CKV_GCP_28",
+    "cloud": "gcp",
+    "resource": "google_storage_bucket_iam_member",
+    "priority": "P1",
+    "topic": "public-exposure",
+    "enabled": true
+  },
+  "check_name": "Ensure that Cloud Storage bucket is not anonymously or publicly accessible",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/gcp/GoogleStorageBucketNotPublic.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-public-policies/bc-gcp-public-1",
+  "format": "timeline",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 2,
+  "repairs_used": 0,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-11-09",
+  "skipped_before": []
+}

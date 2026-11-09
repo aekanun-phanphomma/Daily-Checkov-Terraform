@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"google_storage_bucket\" \"example\" {\n  name     = \"example-storage-bucket\"\n  location = \"US\"\n}\n\nresource \"google_storage_bucket_iam_member\" \"member\" {\n  bucket = google_storage_bucket.example.name\n  role   = \"roles/storage.objectViewer\"\n  member = \"allUsers\"\n}\n",
+  "good_tf": "resource \"google_storage_bucket\" \"example\" {\n  name     = \"example-storage-bucket\"\n  location = \"US\"\n}\n\nresource \"google_storage_bucket_iam_member\" \"member\" {\n  bucket = google_storage_bucket.example.name\n  role   = \"roles/storage.objectViewer\"\n  member = \"group:dev-team@example.com\" # FIX: grant access to specific group not public\n}\n",
+  "why_it_matters": [
+    "Granting roles to allUsers or allAuthenticatedUsers allows unauthenticated internet clients or any valid GCP account to access bucket contents.",
+    "Attackers probe bucket endpoints using Cloud Storage JSON and XML APIs without credentials to list, download, or exfiltrate sensitive files.",
+    "Restricting IAM members to authorized service accounts or domain groups ensures that every read request enforces identity verification."
+  ],
+  "post_en": "You apply an IAM member grant with member = \"allUsers\".\nStep 1: An anonymous scanner probes your Cloud Storage bucket URL over HTTPS using the standard XML API.\nStep 2: The storage service responds with object metadata and download endpoints without requiring any authentication token.\nStep 3: The attacker enumerates and downloads every stored object directly across the public internet.\nCKV_GCP_28 fails when a bucket IAM policy grants access to allUsers or allAuthenticatedUsers.\nRestrict access by setting the member argument to a specific user, group, or service account such as group:dev-team@example.com.\nWould your CI pipeline catch this public bucket grant before it reaches production?"
+}

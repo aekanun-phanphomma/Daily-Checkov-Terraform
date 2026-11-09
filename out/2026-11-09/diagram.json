@@ -1,0 +1,23 @@
+{
+  "title": "Block Public Access to Cloud Storage Buckets",
+  "attacker": {
+    "type": "internet",
+    "label": "Anonymous user"
+  },
+  "gate": {
+    "label": "Bucket IAM member"
+  },
+  "target": {
+    "label": "Storage bucket"
+  },
+  "ally": {
+    "label": "Dev team"
+  },
+  "attack_label": "storage.objects.get",
+  "risk_callout": "Anyone on the internet can read and download bucket objects without credentials.",
+  "control_callout": "Restricts object viewer access to an internal group, blocking anonymous internet reads.",
+  "code_diff": [
+    "- member = \"allUsers\"",
+    "+ member = \"group:dev-team@example.com\""
+  ]
+}
