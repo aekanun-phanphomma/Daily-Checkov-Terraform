@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"aws_s3_bucket\" \"example\" {\n  bucket = \"example-data-bucket\"\n}\n\nresource \"aws_s3_bucket_public_access_block\" \"example\" {\n  bucket                  = aws_s3_bucket.example.id\n  block_public_acls       = true\n  block_public_policy     = false\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}\n",
+  "good_tf": "resource \"aws_s3_bucket\" \"example\" {\n  bucket = \"example-data-bucket\"\n}\n\nresource \"aws_s3_bucket_public_access_block\" \"example\" {\n  bucket                  = aws_s3_bucket.example.id\n  block_public_acls       = true\n  block_public_policy     = true # FIX: Block public bucket policies\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}\n",
+  "why_it_matters": [
+    "When block_public_policy is false, an engineer or script can attach a bucket policy that grants access to anonymous or wildcard principals.",
+    "Unauthenticated attackers can then call S3 REST APIs to read sensitive objects or upload untrusted files directly to the bucket.",
+    "Setting block_public_policy to true rejects any PUT bucket policy request that introduces public access, preserving storage isolation."
+  ],
+  "post_en": "A pull request introducing our new storage module sets block_public_policy to false.\n\nI cannot approve this change as written. Disabling this protection removes a critical safeguard against accidental data exposure. Without it, any future modification to the bucket policy that includes a wildcard principal will succeed, allowing anyone on the internet to query objects via standard S3 REST endpoints without AWS credentials.\n\nPlease change block_public_policy to true. We need this defense-in-depth control active so that AWS rejects any future bucket policy updates granting public access.\n\nCKV_AWS_54 would have flagged this misconfiguration before the pull request reached review.\n\nTreat public access block settings as non-negotiable guardrails against unintended data exposure."
+}

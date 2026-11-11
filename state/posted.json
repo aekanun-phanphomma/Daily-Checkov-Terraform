@@ -146,6 +146,13 @@
       "cloud": "gcp",
       "linkedin": "urn:li:ugcPost:7525455182340644864",
       "facebook": "4819388398386527"
+    },
+    {
+      "date": "2026-11-11",
+      "check_id": "CKV_AWS_54",
+      "cloud": "aws",
+      "linkedin": null,
+      "facebook": null
     }
   ]
 }

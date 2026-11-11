@@ -1,0 +1,64 @@
+{
+  "rule": {
+    "id": "CKV_AWS_54",
+    "cloud": "aws",
+    "resource": "aws_s3_bucket_public_access_block",
+    "priority": "P1",
+    "topic": "public-exposure",
+    "enabled": true
+  },
+  "check_name": "Ensure S3 bucket has block public policy enabled",
+  "source_url": "https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/aws/S3BlockPublicPolicy.py",
+  "guideline_url": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/bc-aws-s3-20",
+  "format": "review",
+  "model": "gemini-3.7-flash",
+  "llm_calls": 3,
+  "repairs_used": 1,
+  "attempts": [
+    {
+      "call": "content",
+      "ok": false,
+      "gate": "G5 good must PASS",
+      "detail": "expected CKV_AWS_54 passed and none of ['CKV_AWS_53', 'CKV_AWS_54'] failed. Results:\n[\n {\n  \"check_id\": \"CKV_AWS_54\",\n  \"result\": \"PASSED\",\n  \"resource\": \"aws_s3_bucket_public_access_block.example\",\n  \"evaluated_keys\": [\n   \"block_public_policy\"\n  ]\n },\n {\n  \"check_id\": \"CKV_AWS_53\",\n  \"result\": \"FAILED\",\n  \"resource\": \"aws_s3_bucket_public_access_block.example\",\n  \"evaluated_keys\": [\n   \"block_public_acls\"\n  ]\n }\n]"
+    },
+    {
+      "call": "content/repair-1",
+      "ok": true
+    },
+    {
+      "call": "diagram",
+      "ok": true
+    }
+  ],
+  "date": "2026-11-11",
+  "skipped_before": [
+    {
+      "check_id": "CKV_AWS_46",
+      "reason": "G8 render: diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff",
+      "attempts": [
+        {
+          "call": "content",
+          "ok": false,
+          "gate": "G6 post text",
+          "detail": "why_it_matters[0] contains a URL; posts are plain English and the pipeline adds links and hashtags"
+        },
+        {
+          "call": "content/repair-1",
+          "ok": true
+        },
+        {
+          "call": "diagram",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff"
+        },
+        {
+          "call": "diagram/repair-2",
+          "ok": false,
+          "gate": "G8 render",
+          "detail": "diagram content does not fit the 1200x1500 canvas (too wide: user_data = \"export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\"); shorten labels, callouts or code_diff"
+        }
+      ]
+    }
+  ]
+}

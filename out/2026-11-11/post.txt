@@ -1,0 +1,17 @@
+A pull request introducing our new storage module sets block_public_policy to false.
+
+I cannot approve this change as written. Disabling this protection removes a critical safeguard against accidental data exposure. Without it, any future modification to the bucket policy that includes a wildcard principal will succeed, allowing anyone on the internet to query objects via standard S3 REST endpoints without AWS credentials.
+
+Please change block_public_policy to true. We need this defense-in-depth control active so that AWS rejects any future bucket policy updates granting public access.
+
+CKV_AWS_54 would have flagged this misconfiguration before the pull request reached review.
+
+Treat public access block settings as non-negotiable guardrails against unintended data exposure.
+
+Proof: both versions, verified with Checkov 3.3.29 (bad must FAIL, fix must PASS):
+https://github.com/aekanun-phanphomma/Daily-Checkov-Terraform/tree/main/out/2026-11-11
+
+Check source: https://github.com/bridgecrewio/checkov/blob/main/checkov/terraform/checks/resource/aws/S3BlockPublicPolicy.py
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/bc-aws-s3-20
+
+#Terraform #Checkov #DevSecOps #IaC #AWS

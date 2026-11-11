@@ -1,0 +1,20 @@
+{
+  "title": "Block Public Bucket Policies in S3",
+  "attacker": {
+    "type": "internet",
+    "label": "Anonymous attacker"
+  },
+  "gate": {
+    "label": "Public access block"
+  },
+  "target": {
+    "label": "S3 bucket"
+  },
+  "attack_label": "s3:GetObject",
+  "risk_callout": "A public bucket policy can expose sensitive data to unauthenticated internet requests.",
+  "control_callout": "Rejects policies that allow anonymous or public access, keeping data private.",
+  "code_diff": [
+    "- block_public_policy = false",
+    "+ block_public_policy = true"
+  ]
+}
