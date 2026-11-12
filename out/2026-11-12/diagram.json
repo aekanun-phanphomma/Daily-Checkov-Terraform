@@ -1,0 +1,23 @@
+{
+  "title": "Restrict Inbound HTTP Port 80 Access",
+  "attacker": {
+    "type": "internet",
+    "label": "Anonymous Attacker"
+  },
+  "gate": {
+    "label": "Azure NSG Rule"
+  },
+  "target": {
+    "label": "Web Server"
+  },
+  "ally": {
+    "label": "Internal Subnet"
+  },
+  "attack_label": "TCP 80 (HTTP)",
+  "risk_callout": "Allows unencrypted HTTP traffic from any public IP to reach the target web server.",
+  "control_callout": "Limits inbound HTTP access to internal subnet range 10.0.0.0/16 only.",
+  "code_diff": [
+    "- source_address_prefix = \"*\"",
+    "+ source_address_prefix = \"10.0.0.0/16\""
+  ]
+}

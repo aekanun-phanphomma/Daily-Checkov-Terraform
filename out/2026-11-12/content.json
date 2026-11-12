@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"azurerm_network_security_rule\" \"example\" {\n  name                        = \"allow-http\"\n  priority                    = 100\n  direction                   = \"Inbound\"\n  access                      = \"Allow\"\n  protocol                    = \"Tcp\"\n  source_port_range           = \"*\"\n  destination_port_range      = \"80\"\n  source_address_prefix       = \"*\"\n  destination_address_prefix  = \"*\"\n  resource_group_name         = \"example-rg\"\n  network_security_group_name = \"example-nsg\"\n}\n",
+  "good_tf": "resource \"azurerm_network_security_rule\" \"example\" {\n  name                        = \"allow-http\"\n  priority                    = 100\n  direction                   = \"Inbound\"\n  access                      = \"Allow\"\n  protocol                    = \"Tcp\"\n  source_port_range           = \"*\"\n  destination_port_range      = \"80\"\n  source_address_prefix       = \"10.0.0.0/16\" # FIX: restrict HTTP access to internal network\n  destination_address_prefix  = \"*\"\n  resource_group_name         = \"example-rg\"\n  network_security_group_name = \"example-nsg\"\n}\n",
+  "why_it_matters": [
+    "Unencrypted HTTP traffic on port 80 exposes web app data to interception and tampering by any adversary on the internet path.",
+    "Allowing wildcards in source address prefixes permits arbitrary public IP addresses to initiate cleartext TCP connections directly to network interfaces.",
+    "Restricting source prefixes to explicit internal subnets or blocking public port 80 forces traffic through TLS-terminating reverse proxies or private endpoints."
+  ],
+  "post_en": "Network security rules allowing inbound TCP port 80 from wildcard source addresses expose backend web instances to unencrypted internet traffic.\nSet source_address_prefix to a specific internal IP block like 10.0.0.0/16 instead of a wildcard or Internet.\nThis restricts direct unencrypted HTTP ingress to trusted network segments and prevents opportunistic external scanning.\nCKV_AZURE_160 fails the first version and passes the second."
+}
