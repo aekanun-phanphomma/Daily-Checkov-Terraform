@@ -1,0 +1,23 @@
+{
+  "title": "Avoid Basic IAM Roles at Project Level",
+  "attacker": {
+    "type": "user",
+    "label": "Dev Account"
+  },
+  "gate": {
+    "label": "IAM Role"
+  },
+  "target": {
+    "label": "GCP Services"
+  },
+  "ally": {
+    "label": "Dev User"
+  },
+  "attack_label": "GCP API Access",
+  "risk_callout": "Editor role grants broad write access across all project resources.",
+  "control_callout": "Compute viewer limits access to read-only compute resources.",
+  "code_diff": [
+    "- role = \"roles/editor\"",
+    "+ role = \"roles/compute.viewer\""
+  ]
+}

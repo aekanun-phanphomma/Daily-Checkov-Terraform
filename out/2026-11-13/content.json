@@ -1,0 +1,10 @@
+{
+  "bad_tf": "resource \"google_project_iam_member\" \"project_user\" {\n  project = \"my-project-id\"\n  role    = \"roles/editor\"\n  member  = \"user:dev@example.com\"\n}\n",
+  "good_tf": "resource \"google_project_iam_member\" \"project_user\" {\n  project = \"my-project-id\"\n  role    = \"roles/compute.viewer\" # FIX: Use fine-grained role instead of basic role\n  member  = \"user:dev@example.com\"\n}\n",
+  "why_it_matters": [
+    "Basic roles like Owner, Editor, and Viewer grant broad permissions across all GCP resources in a project, breaking least privilege principles.",
+    "Compromised credentials bound to roles/editor allow attackers to create resources, modify existing infrastructure, and access sensitive data across all services.",
+    "Replacing primitive roles with fine-grained predefined or custom IAM roles restricts potential privilege escalation and bounds lateral movement within the project."
+  ],
+  "post_en": "Myth: Assigning roles/editor to developers at the project level is safe because project boundaries prevent access to external infrastructure.\n\nFact: Basic primitive roles grant wide read, write, and delete permissions across virtually every Google Cloud service inside that project. An attacker who gains control of credentials with roles/editor can modify network configurations, read Cloud Storage objects, spin up compute instances, and alter logging parameters without restricted controls.\n\nStatic analysis fails configurations when google_project_iam_member or google_project_iam_binding resources grant basic primitive roles at the project level.\n\nThe fix updates the role argument to a predefined or custom fine-grained role such as roles/compute.viewer instead of primitive roles.\n\nWhich IAM role assumption has your engineering team had to unlearn when securing cloud projects?"
+}
