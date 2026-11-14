@@ -1,0 +1,20 @@
+{
+  "title": "Drop AdministratorAccess Policy",
+  "attacker": {
+    "type": "user",
+    "label": "Compromised EC2"
+  },
+  "gate": {
+    "label": "Role Policy"
+  },
+  "target": {
+    "label": "AWS Account"
+  },
+  "attack_label": "Admin API Calls",
+  "risk_callout": "Administrator privileges allow total takeover of the AWS account.",
+  "control_callout": "ReadOnlyAccess blocks destructive and administrative actions.",
+  "code_diff": [
+    "- \"arn:aws:iam::aws:policy/AdministratorAccess\"",
+    "+ \"arn:aws:iam::aws:policy/ReadOnlyAccess\""
+  ]
+}
